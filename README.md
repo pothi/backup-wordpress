@@ -7,13 +7,13 @@ How to Implement it in cPanel
 -----------------------------
 
 1. Create a folder named 'backups' in '/home/username/' folder. So, once, this folder is created the contents of the '/home/username/' would look something like this...
-* .cpanel
-* .trash
-* backups
-* etc
-* perl5
-* public_ftp
-* public_html
+    * .cpanel
+    * .trash
+    * backups
+    * etc
+    * perl5
+    * public_ftp
+    * public_html
 2. Create the following two folders in '/home/username/backups/'
 * databases
 * files
