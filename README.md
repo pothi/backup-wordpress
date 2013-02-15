@@ -32,7 +32,7 @@ There are plenty of plugins available to take backups within WordPress. However,
 5. Create two cron jobs in cPanel with the following commands
     * $(which bash) /home/username/backups/files-backup_weekly.sh >/dev/null 2>&1
     * $(which bash) /home/username/backups/database-backup_nightly.sh >/dev/null 2>&1
-6. The above commands can be executed in whatever the schedule you like. As the name suggestion, you can run...
+6. The above commands can be executed in whatever the schedule you like. As the name suggests, you can run...
     * files-backup_weekly.sh on a weekly schedule
     * database-backup_nightly.sh on a nightly schedule
 
