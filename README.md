@@ -36,7 +36,7 @@ There are plenty of plugins available to take backups within WordPress. However,
     * files-backup_weekly.sh on a weekly schedule
     * database-backup_nightly.sh on a nightly schedule
 
-Suggestions, bug reports, issues, forks are always welcome!
-
 ### Have Questions?
 Contact me (pothi) at https://www.tinywp.in/contact/
+
+Suggestions, bug reports, issues, forks are always welcome!
