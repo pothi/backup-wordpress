@@ -21,5 +21,8 @@ WPUSER=$(sed "s/[()',;]/ /g" $WP_CONFIG_PATH | grep DB_USER | awk '{print $3}')
 WPDB=`sed "s/[()',;]/ /g" $WP_CONFIG_PATH | grep DB_NAME | awk '{print $3}'`
 
 # create a backup using the information obtained through the above process
-mysqldump --add-drop-table -u$WPUSER -p$WPPASS $WPDB > ${BACKUP_PATH}db-${SITE_NAME}-$(date +%F_%H-%M-%S).sql
+mysqldump --add-drop-table -u$WPUSER -p$WPPASS $WPDB | bzip2 -c > ${BACKUP_PATH}db-${SITE_NAME}-$(date +%F_%H-%M-%S).sql.bz2
+
+# if bzip is not available
+# mysqldump --add-drop-table -u$WPUSER -p$WPPASS $WPDB > ${BACKUP_PATH}db-${SITE_NAME}-$(date +%F_%H-%M-%S).sql
 
