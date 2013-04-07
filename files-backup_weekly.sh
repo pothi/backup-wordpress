@@ -8,7 +8,7 @@ USERNAME=pothi
 SITE_NAME=tinywp.com
 
 # where to store the backup file/s
-BACKUP_PATH=/home/username/backups/files/
+BACKUP_PATH=/home/${USERNAME}/backups/files/
 
 # path to be backed up
 INC_PATH=/home/${USERNAME}/public_html/
