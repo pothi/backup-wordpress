@@ -14,6 +14,7 @@ BACKUP_PATH=/home/${USERNAME}/backups/files/
 INC_PATH=/home/${USERNAME}/public_html/
 
 # path to be excluded from the backup
+# no trailing slash, please
 EXC_PATH_1=/home/${USERNAME}/public_html/wp-content/cache
 EXC_PATH_2=/home/${USERNAME}/public_html/cgi-bin
 
