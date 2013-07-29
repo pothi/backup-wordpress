@@ -1,17 +1,14 @@
 #!/bin/bash
 
 ### Variables
-# The name of the user
-USERNAME=pothi
-
 # The name of the site
-SITE_NAME=tinywp.com
+SITE_NAME=$1
 
 # path to wp-config.php file
-WP_CONFIG_PATH=/home/${USERNAME}/public_html/wp-config.php
+WP_CONFIG_PATH=${HOME}/public_html/wp-config.php
 
 # where to store the backups?
-BACKUP_PATH=/home/${USERNAME}/backups/databases/
+BACKUP_PATH=${HOME}/Backup/databases/
 
 #-------- Do NOT Edit Below This Line --------#
 
