@@ -2,15 +2,23 @@
 
 ### Variables
 # The name of the site
-SITE_NAME=$1
+DEFAULT_SITE="domainname.com"
 
 # path to wp-config.php file
-WP_CONFIG_PATH=${HOME}/public_html/wp-config.php
+# WP_CONFIG_PATH=${HOME}/public_html/wp-config.php
 
 # where to store the backups?
 BACKUP_PATH=${HOME}/Backup/databases/
 
 #-------- Do NOT Edit Below This Line --------#
+
+if [$1 == ""]; then
+    SITE_NAME=$DEFAULT_SITE
+else
+    SITE_NAME=$1
+fi
+
+WP_CONFIG_PATH=${HOME}/sites/$SITE_NAME/wp-config.php
 
 # extract the password, username and name of the database from wp-config.php file
 WPPASS=$(sed "s/[()',;]/ /g" $WP_CONFIG_PATH | grep DB_PASSWORD | awk '{print $3}')
