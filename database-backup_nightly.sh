@@ -18,7 +18,11 @@ else
     SITE_NAME=$1
 fi
 
-WP_CONFIG_PATH=${HOME}/sites/$SITE_NAME/wp-config.php
+if [ -f "${HOME}/sites/$SITE_NAME/wp-config.php" ]; then
+    WP_CONFIG_PATH=${HOME}/sites/$SITE_NAME/wp-config.php
+else
+    WP_CONFIG_PATH=${HOME}/sites/$SITE_NAME/wordpress/wp-config.php
+fi
 
 # extract the password, username and name of the database from wp-config.php file
 WPPASS=$(sed "s/[()',;]/ /g" $WP_CONFIG_PATH | grep DB_PASSWORD | awk '{print $3}')
