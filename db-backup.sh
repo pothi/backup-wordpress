@@ -12,7 +12,7 @@ BACKUP_PATH=${HOME}/Backup/databases/
 
 #-------- Do NOT Edit Below This Line --------#
 
-if [ $1 == "" ]; then
+if [ "$1" == "" ]; then
     SITE_NAME=$DEFAULT_SITE
 else
     SITE_NAME=$1
