@@ -29,6 +29,9 @@ WPPASS=`$(which sed) "s/[()',;]/ /g" ${WP_CONFIG_PATH}/wp-config.php | $(which g
 
 mkdir ~/log/ &> /dev/null
 
+echo 'Date: '$(date +%F) >> ~/log/clean-wp-db.log
+echo 'Time: '$(date +%H-%M-%S) >> ~/log/clean-wp-db.log
+
 echo 'Cleaning up akismet junk in commentsmeta table'
 echo 'Cleaning up akismet junk in commentsmeta table' >> ~/log/clean-wp-db.log
 $(which mysql) -vvv -u$WPUSER -p$WPPASS $WPDB -e 'DELETE FROM '$WPPREFIX'commentmeta WHERE meta_key LIKE "%akismet%";' >> ~/log/clean-wp-db.log
