@@ -35,7 +35,7 @@ $(which mysql) -vvv -u$WPUSER -p$WPPASS $WPDB -e 'DELETE FROM '$WPPREFIX'comment
 
 echo 'Cleaning up unconnected comments in commentsmeta table'
 echo 'Cleaning up unconnected comments in commentsmeta table' >> ~/log/clean-wp-db.log
-$(which mysql) -vvv -u$WPUSER -p$WPPASS $WPDB -e 'DELETE FROM '$WPPREFIX'commentmeta WHERE meta_key LIKE "%akismet%";' >> ~/log/clean-wp-db.log
+$(which mysql) -vvv -u$WPUSER -p$WPPASS $WPDB -e 'DELETE FROM '$WPPREFIX'commentmeta WHERE comment_id NOT IN ( SELECT comment_id FROM '$WPPREFIX'comments );' >> ~/log/clean-wp-db.log
 
 echo 'Cleaning up spam comments'
 echo 'Cleaning up spam comments' >> ~/log/clean-wp-db.log
