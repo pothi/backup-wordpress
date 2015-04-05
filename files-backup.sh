@@ -14,15 +14,26 @@
 
 # where to store the backup file/s
 BACKUP_PATH=${HOME}/Backup/files/
+if [ ! -d "$BACKUP_PATH" ] && [ "$(mkdir -p $BACKUP_PATH)" ]; then
+	echo 'BACKUP_PATH is not found at '$BACKUP_PATH
+	echo 'You may want to create it manually'
+	exit 1
+fi
+
 
 # path to be backed up
-INC_PATH=${HOME}/sites/
+SITE_PATH=${HOME}/sites/domainname.com
+if [ ! -d "$SITE_PATH" ]; then
+	echo 'Site is not found at '$SITE_PATH
+	exit 1
+fi
+
 
 # path to be excluded from the backup
 # no trailing slash, please
-EXC_PATH_1=$INC_PATH/wp-content/cache
-EXC_PATH_2=$INC_PATH/wp-content/backups
-EXC_PATH_3=$INC_PATH/wp-content/uploads/backups
+EXC_PATH_1=$SITE_PATH/wordpress/wp-content/cache
+EXC_PATH_2=$SITE_PATH/wordpress/wp-content/backups
+EXC_PATH_3=$SITE_PATH/wordpress/wp-content/uploads/backups
 
 ### Do not edit below this line ###
 
@@ -39,5 +50,4 @@ rename -- -1- -2- ${BACKUP_FILE_NAME}-1-* &> /dev/null
 
 # let's do it using tar
 # Create a fresh backup
-tar czf ${BACKUP_FILE_NAME}-1-$(date +%F_%H-%M-%S).tar.gz --exclude=$EXC_PATH_1 --exclude=$EXC_PATH_2 --exclude=$EXC_PATH_3 $INC_PATH &> /dev/null
-
+tar hczf ${BACKUP_FILE_NAME}-1-$(date +%F_%H-%M-%S).tar.gz --exclude=$EXC_PATH_1 --exclude=$EXC_PATH_2 --exclude=$EXC_PATH_3 $SITE_PATH &> /dev/null
