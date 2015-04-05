@@ -33,6 +33,24 @@ if [ ! -d "$SITE_PATH" ]; then
 	exit 1
 fi
 
+
+# Delete backups that are two months older
+MONTHSAGO=$(expr $(date +%m) - 2)
+case $MONTHSAGO in
+-1)
+	rm -f ${BACKUP_PATH}/db-${SITE_NAME}-$(expr $(date +%Y) -1)-11-*.sql.gz &> /dev/null
+	;;
+0)
+	rm -f ${BACKUP_PATH}/db-${SITE_NAME}-$(expr $(date +%Y) -1)-12-*.sql.gz &> /dev/null
+	;;
+*)
+	rm -f ${BACKUP_PATH}/db-${SITE_NAME}-$(date +%Y)-0$MONTHSAGO-*.sql.gz &> /dev/null
+	;;
+10)
+	rm -f ${BACKUP_PATH}/db-${SITE_NAME}-$(date +%Y)-10-*.sql.gz &> /dev/null
+	;;
+esac
+
 # if exists, move the existing backup from $SITE_PATH to $BACKUP_PATH
 # then store the new backup to $SITE_PATH
 # to be taken as a backup by files-backup.sh script
