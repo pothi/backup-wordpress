@@ -51,9 +51,9 @@ for i in "${!EXC_PATH[@]}" ; do
 	EXCLUDES=${EXCLUDES}' --exclude='$CURRENT_EXC_PATH
 done
 
-echo $EXCLUDES
+# echo $EXCLUDES
 
-exit
+# exit
 
 ### Do not edit below this line ###
 
