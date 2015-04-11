@@ -1,8 +1,11 @@
 #!/bin/bash
 
+# Variable
+TOTAL_BACKUPS=4
+
 # Takes backup of all the sites
-# Keeps 4 latest backups
-# Removes oldest backups (older than 4 backups)
+# Assume we need 4 latest backups
+# This script removes oldest backups (older than 4 backups)
 
 ### Files are named in the following way...
 # all-files-xyz-1-date.tar.gz (latest backup)
@@ -40,20 +43,16 @@ fi
 # no trailing slash, please
 declare -A EXC_PATH
 EXC_PATH[1]=$SITE_PATH/wordpress/wp-content/cache
-EXC_PATH[2]=$SITE_PATH/wordpress/wp-content/backups
-EXC_PATH[3]=$SITE_PATH/wordpress/wp-content/uploads/backups
+EXC_PATH[2]=$SITE_PATH/wordpress/wp-content/object-cache.php
+EXC_PATH[3]=$SITE_PATH/wordpress/wp-content/uploads
+# need more? - just use the above format
 
 EXCLUDES=''
 for i in "${!EXC_PATH[@]}" ; do
-	# echo 'i: '$i
 	CURRENT_EXC_PATH=${EXC_PATH[$i]}
-	# echo 'Current PATH: '$CURRENT_EXC_PATH
-	EXCLUDES=${EXCLUDES}' --exclude='$CURRENT_EXC_PATH
+	EXCLUDES=${EXCLUDES}'--exclude='$CURRENT_EXC_PATH' '
+	# remember the trailing space; we'll use it later
 done
-
-# echo $EXCLUDES
-
-# exit
 
 ### Do not edit below this line ###
 
@@ -62,13 +61,20 @@ done
 BACKUP_FILE_NAME=${BACKUP_PATH}/files-${DOMAIN}
 
 # Remove the oldest file
-rm ${BACKUP_FILE_NAME}-4-* &> /dev/null
+rm ${BACKUP_FILE_NAME}-$TOTAL_BACKUPS-* &> /dev/null
 
 # Rename other files to make them older
-rename -- -3- -4- ${BACKUP_FILE_NAME}-3-* &> /dev/null
-rename -- -2- -3- ${BACKUP_FILE_NAME}-2-* &> /dev/null
-rename -- -1- -2- ${BACKUP_FILE_NAME}-1-* &> /dev/null
+for i in `seq $TOTAL_BACKUPS -1 1`
+do
+	# let's first try to do CentOS way of doing things
+    rename -- -$(($i-1))- -$i- ${BACKUP_FILE_NAME}-$(($i-1))-* &> /dev/null
+    if [ "$?" != 0 ]; then
+		# not do it in Debian way
+        rename 's/-'$(($i-1))'-/-'$i'-/' ${BACKUP_FILE_NAME}-$(($i-1))-* &> /dev/null
+    fi
+done
 
 # let's do it using tar
 # Create a fresh backup
-tar hczf ${BACKUP_FILE_NAME}-1-$(date +%F_%H-%M-%S).tar.gz $EXCLUDES $SITE_PATH &> /dev/null
+# ${EXCLUDES}$SITE_PATH ??? - remember the trailing space now?
+tar hczf ${BACKUP_FILE_NAME}-1-$(date +%F_%H-%M-%S).tar.gz ${EXCLUDES}$SITE_PATH &> /dev/null
