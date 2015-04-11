@@ -20,7 +20,7 @@ if [ "${DOMAIN}" == '' ]; then
 fi
 
 # path to be backed up
-SITE_PATH=${HOME}/sites/${DOMAIN}
+SITE_PATH=${HOME}sites/${DOMAIN}
 if [ ! -d "$SITE_PATH" ]; then
 	echo 'Site is not found at '$SITE_PATH
 	exit 1
