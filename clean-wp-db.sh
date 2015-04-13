@@ -14,7 +14,7 @@ if [ ! -f "${WP_CONFIG_PATH}/wp-config.php" ]; then
 fi
 
 WPDB=`$(which sed) "s/[()',;]/ /g" ${WP_CONFIG_PATH}/wp-config.php | $(which grep) DB_NAME | $(which awk) '{print $3}'`
-WPPREFIX=`$(which sed) "s/[()',;]/ /g" ${WP_CONFIG_PATH}/wp-config.php | $(which grep) table_prefix | $(which awk) '{print $3}'`
+WPPREFIX=`$(which sed) "s/[()',;]/ /g" ${WP_CONFIG_PATH}/wp-config.php | $(which grep) '^\$table_prefix' | $(which awk) '{print $3}'`
 WPUSER=`$(which sed) "s/[()',;]/ /g" ${WP_CONFIG_PATH}/wp-config.php | $(which grep) DB_USER | $(which awk) '{print $3}'`
 WPPASS=`$(which sed) "s/[()',;]/ /g" ${WP_CONFIG_PATH}/wp-config.php | $(which grep) DB_PASSWORD | $(which awk) '{print $3}'`
 
