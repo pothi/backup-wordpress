@@ -9,7 +9,7 @@ DEFAULT_SITE="domainname.com"
 # WP_CONFIG_PATH=${HOME}/public_html/wp-config.php
 
 # where to store the backups?
-BACKUP_PATH=${HOME}/Backup/databases
+BACKUP_PATH=${HOME}Backup/databases
 
 #-------- Do NOT Edit Below This Line --------#
 
@@ -27,9 +27,9 @@ if [ "$1" == "" ]; then
 else
     SITE_NAME=$1
 fi
-SITE_PATH=${HOME}/sites/$SITE_NAME
+SITE_PATH=${HOME}sites/$SITE_NAME
 if [ ! -d "$SITE_PATH" ]; then
-	echo 'Site is not found at '$SITE_PATH
+	echo 'Site is not found at '$SITE_PATH; echo 'Usage db-backup.sh domainname.com';
 	exit 1
 fi
 
@@ -79,3 +79,4 @@ mysqldump --add-drop-table -u$WPUSER -p$WPPASS $WPDB | gzip > ${SITE_PATH}/db-${
 # if gzip is not available
 # mysqldump --add-drop-table -u$WPUSER -p$WPPASS $WPDB > ${BACKUP_PATH}db-${SITE_NAME}-$(date +%F_%H-%M-%S).sql
 
+echo; echo 'DB backup done; please check the latest backup at '${SITE_PATH}' and the older backups at '${BACKUP_PATH}'.'; echo
