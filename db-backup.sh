@@ -74,9 +74,19 @@ WPDB=`sed "s/[()',;]/ /g" $WP_CONFIG_PATH | grep DB_NAME | awk '{print $3}'`
 
 # create a backup using the information obtained through the above process
 # mysqldump --add-drop-table -u$WPUSER -p$WPPASS $WPDB | gzip > ${BACKUP_PATH}/db-${SITE_NAME}-$(date +%F_%H-%M-%S).sql.gz
-mysqldump --add-drop-table -u$WPUSER -p$WPPASS $WPDB | gzip > ${SITE_PATH}/db-${SITE_NAME}-$(date +%F_%H-%M-%S).sql.gz
+CURRENT_DATE_TIME=$(date +%F_%H-%M-%S)
+mysqldump --add-drop-table -u$WPUSER -p$WPPASS $WPDB | gzip > ${SITE_PATH}/db-${SITE_NAME}-${CURRENT_DATE_TIME}.sql.gz
 
 # if gzip is not available
 # mysqldump --add-drop-table -u$WPUSER -p$WPPASS $WPDB > ${BACKUP_PATH}db-${SITE_NAME}-$(date +%F_%H-%M-%S).sql
+
+if [ "$2" != "" ]; then
+    /usr/local/bin/aws s3 cp ${SITE_PATH}/db-${SITE_NAME}-${CURRENT_DATE_TIME}.sql.gz s3://$2/databases/
+    if [ "$?" != "0" ]; then
+        echo; echo 'Something went wrong while taking offsite backup'; echo
+    else
+        echo; echo 'Offsite backup successful'; echo
+    fi
+fi
 
 echo; echo 'DB backup done; please check the latest backup at '${SITE_PATH}' and the older backups at '${BACKUP_PATH}'.'; echo
