@@ -17,9 +17,15 @@ TOTAL_BACKUPS=4
 
 DOMAIN=
 
-if [ "${DOMAIN}" == '' ]; then
-	source ~/.my.exports
-	DOMAIN=$MY_DOMAIN
+if [ "$1" == "" ]; then
+    if [ -f "$HOME.my.exports" ]; then
+        source ~/.my.exports
+        DOMAIN=$MY_DOMAIN
+    else
+        echo 'Usage files-backup.sh domainname.com'; exit 1
+    fi
+else
+    DOMAIN=$1
 fi
 
 # path to be backed up
@@ -31,7 +37,7 @@ fi
 
 
 # where to store the backup file/s
-BACKUP_PATH=${HOME}/Backup/files
+BACKUP_PATH=${HOME}Backup/files
 if [ ! -d "$BACKUP_PATH" ] && [ "$(mkdir -p $BACKUP_PATH)" ]; then
 	echo 'BACKUP_PATH is not found at '$BACKUP_PATH
 	echo 'You may want to create it manually'
@@ -78,3 +84,5 @@ done
 # Create a fresh backup
 # ${EXCLUDES}$SITE_PATH ??? - remember the trailing space now?
 tar hczf ${BACKUP_FILE_NAME}-1-$(date +%F_%H-%M-%S).tar.gz ${EXCLUDES}$SITE_PATH &> /dev/null
+
+echo; echo 'Files backup done; please check the latest backup at '${BACKUP_PATH}'.'; echo
