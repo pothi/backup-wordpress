@@ -48,9 +48,9 @@ fi
 # path to be excluded from the backup
 # no trailing slash, please
 declare -A EXC_PATH
-EXC_PATH[1]=$SITE_PATH/wordpress/wp-content/cache
-EXC_PATH[2]=$SITE_PATH/wordpress/wp-content/object-cache.php
-EXC_PATH[3]=$SITE_PATH/wordpress/wp-content/uploads
+EXC_PATH[1]=${DOMAIN}/wordpress/wp-content/cache
+EXC_PATH[2]=${DOMAIN}/wordpress/wp-content/object-cache.php
+EXC_PATH[3]=${DOMAIN}/wordpress/wp-content/debug.log
 # need more? - just use the above format
 
 EXCLUDES=''
@@ -82,7 +82,16 @@ done
 
 # let's do it using tar
 # Create a fresh backup
-# ${EXCLUDES}$SITE_PATH ??? - remember the trailing space now?
-tar hczf ${BACKUP_FILE_NAME}-1-$(date +%F_%H-%M-%S).tar.gz ${EXCLUDES}$SITE_PATH &> /dev/null
+CURRENT_DATE_TIME=$(date +%F_%H-%M-%S)
+tar hczf ${BACKUP_FILE_NAME}-1-$CURRENT_DATE_TIME.tar.gz -C ${HOME}sites ${EXCLUDES} ${DOMAIN} &> /dev/null
+
+if [ "$2" != "" ]; then
+    /usr/local/bin/aws s3 cp ${BACKUP_FILE_NAME}-1-$CURRENT_DATE_TIME.tar.gz s3://$2/files/
+    if [ "$?" != "0" ]; then
+        echo; echo 'Something went wrong while taking offsite backup'; echo
+    else
+        echo; echo 'Offsite backup successful'; echo
+    fi
+fi
 
 echo; echo 'Files backup done; please check the latest backup at '${BACKUP_PATH}'.'; echo
