@@ -2,6 +2,14 @@
 
 ### Variables - Please do not add trailing slash in the PATHs
 
+# if you'd like to enable offsite backup...
+# run 'pip install aws'
+# aws configure
+
+LOG_FILE=${HOME}log/backups.log
+exec > >(tee -a ${LOG_FILE} )
+exec 2> >(tee -a ${LOG_FILE} >&2)
+
 # The name of the site
 DEFAULT_SITE="domainname.com"
 
@@ -29,7 +37,7 @@ else
 fi
 SITE_PATH=${HOME}sites/$SITE_NAME
 if [ ! -d "$SITE_PATH" ]; then
-	echo 'Site is not found at '$SITE_PATH; echo 'Usage db-backup.sh domainname.com';
+	echo 'Site is not found at '$SITE_PATH; echo 'Usage db-backup.sh domainname.com (S3 bucket name)';
 	exit 1
 fi
 
@@ -81,9 +89,14 @@ mysqldump --add-drop-table -u$WPUSER -p$WPPASS $WPDB | gzip > ${SITE_PATH}/db-${
 # mysqldump --add-drop-table -u$WPUSER -p$WPPASS $WPDB > ${BACKUP_PATH}db-${SITE_NAME}-$(date +%F_%H-%M-%S).sql
 
 if [ "$2" != "" ]; then
-    /usr/local/bin/aws s3 cp ${SITE_PATH}/db-${SITE_NAME}-${CURRENT_DATE_TIME}.sql.gz s3://$2/databases/
+	if [ ! -e "/usr/local/bin/aws" ] ; then
+		echo; echo 'Did you run "pip install aws && aws configure"'; echo;
+	fi
+
+    /usr/local/bin/aws s3 cp ${SITE_PATH}/db-${SITE_NAME}-${CURRENT_DATE_TIME}.sql.gz s3://$2/backups/databases/
     if [ "$?" != "0" ]; then
-        echo; echo 'Something went wrong while taking offsite backup'; echo
+        echo; echo 'Something went wrong while taking offsite backup';
+		echo "Check $LOG_FILE for any log info"; echo
     else
         echo; echo 'Offsite backup successful'; echo
     fi

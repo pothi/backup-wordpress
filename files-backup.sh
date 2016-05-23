@@ -3,6 +3,14 @@
 # Variable
 TOTAL_BACKUPS=4
 
+# if you'd like to enable offsite backup...
+# run 'pip install aws'
+# aws configure
+
+LOG_FILE=${HOME}log/backups.log
+exec > >(tee -a ${LOG_FILE} )
+exec 2> >(tee -a ${LOG_FILE} >&2)
+
 # Takes backup of all the sites
 # Assume we need 4 latest backups
 # This script removes oldest backups (older than 4 backups)
@@ -22,7 +30,7 @@ if [ "$1" == "" ]; then
         source ~/.my.exports
         DOMAIN=$MY_DOMAIN
     else
-        echo 'Usage files-backup.sh domainname.com'; exit 1
+		echo 'Usage files-backup.sh domainname.com (S3 bucket name)'; exit 1
     fi
 else
     DOMAIN=$1
@@ -86,9 +94,14 @@ CURRENT_DATE_TIME=$(date +%F_%H-%M-%S)
 tar hczf ${BACKUP_FILE_NAME}-1-$CURRENT_DATE_TIME.tar.gz -C ${HOME}sites ${EXCLUDES} ${DOMAIN} &> /dev/null
 
 if [ "$2" != "" ]; then
-    /usr/local/bin/aws s3 cp ${BACKUP_FILE_NAME}-1-$CURRENT_DATE_TIME.tar.gz s3://$2/files/
+	if [ ! -e "/usr/local/bin/aws" ] ; then
+		echo; echo 'Did you run "pip install aws && aws configure"'; echo;
+	fi
+
+    /usr/local/bin/aws s3 cp ${BACKUP_FILE_NAME}-1-$CURRENT_DATE_TIME.tar.gz s3://$2/backups/files/
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking offsite backup'; echo
+		echo "Check $LOG_FILE for any log info"; echo
     else
         echo; echo 'Offsite backup successful'; echo
     fi
