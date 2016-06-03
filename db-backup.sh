@@ -31,11 +31,11 @@ fi
 
 
 if [ "$1" == "" ]; then
-    SITE_NAME=$DEFAULT_SITE
+    DOMAIN=$DEFAULT_SITE
 else
-    SITE_NAME=$1
+    DOMAIN=$1
 fi
-SITE_PATH=${HOME}/sites/$SITE_NAME
+SITE_PATH=${HOME}/sites/$DOMAIN
 if [ ! -d "$SITE_PATH" ]; then
 	echo 'Site is not found at '$SITE_PATH; echo 'Usage db-backup.sh domainname.com (S3 bucket name)';
 	exit 1
@@ -46,16 +46,16 @@ fi
 MONTHSAGO=$(expr $(date +%m) - 2)
 case $MONTHSAGO in
 -1)
-	rm -f ${BACKUP_PATH}/db-${SITE_NAME}-$(expr $(date +%Y) -1)-11-*.sql.gz &> /dev/null
+	rm -f ${BACKUP_PATH}/db-${DOMAIN}-$(expr $(date +%Y) -1)-11-*.sql.gz &> /dev/null
 	;;
 0)
-	rm -f ${BACKUP_PATH}/db-${SITE_NAME}-$(expr $(date +%Y) -1)-12-*.sql.gz &> /dev/null
+	rm -f ${BACKUP_PATH}/db-${DOMAIN}-$(expr $(date +%Y) -1)-12-*.sql.gz &> /dev/null
 	;;
 *)
-	rm -f ${BACKUP_PATH}/db-${SITE_NAME}-$(date +%Y)-0$MONTHSAGO-*.sql.gz &> /dev/null
+	rm -f ${BACKUP_PATH}/db-${DOMAIN}-$(date +%Y)-0$MONTHSAGO-*.sql.gz &> /dev/null
 	;;
 10)
-	rm -f ${BACKUP_PATH}/db-${SITE_NAME}-$(date +%Y)-10-*.sql.gz &> /dev/null
+	rm -f ${BACKUP_PATH}/db-${DOMAIN}-$(date +%Y)-10-*.sql.gz &> /dev/null
 	;;
 esac
 
@@ -64,7 +64,7 @@ esac
 # to be taken as a backup by files-backup.sh script
 mv $SITE_PATH/db-*.sql.gz ${BACKUP_PATH}/ &> /dev/null
 
-if [ -f "${HOME}/sites/$SITE_NAME/wp-config.php" ]; then
+if [ -f "${HOME}/sites/$DOMAIN/wp-config.php" ]; then
     WP_CONFIG_PATH=${SITE_PATH}/wp-config.php
 else
     WP_CONFIG_PATH=${SITE_PATH}/wordpress/wp-config.php
@@ -81,19 +81,19 @@ WPUSER=$(sed "s/[()',;]/ /g" $WP_CONFIG_PATH | grep DB_USER | awk '{print $3}')
 WPDB=`sed "s/[()',;]/ /g" $WP_CONFIG_PATH | grep DB_NAME | awk '{print $3}'`
 
 # create a backup using the information obtained through the above process
-# mysqldump --add-drop-table -u$WPUSER -p$WPPASS $WPDB | gzip > ${BACKUP_PATH}/db-${SITE_NAME}-$(date +%F_%H-%M-%S).sql.gz
+# mysqldump --add-drop-table -u$WPUSER -p$WPPASS $WPDB | gzip > ${BACKUP_PATH}/db-${DOMAIN}-$(date +%F_%H-%M-%S).sql.gz
 CURRENT_DATE_TIME=$(date +%F_%H-%M-%S)
-mysqldump --add-drop-table -u$WPUSER -p$WPPASS $WPDB | gzip > ${SITE_PATH}/db-${SITE_NAME}-${CURRENT_DATE_TIME}.sql.gz
+mysqldump --add-drop-table -u$WPUSER -p$WPPASS $WPDB | gzip > ${SITE_PATH}/db-${DOMAIN}-${CURRENT_DATE_TIME}.sql.gz
 
 # if gzip is not available
-# mysqldump --add-drop-table -u$WPUSER -p$WPPASS $WPDB > ${BACKUP_PATH}db-${SITE_NAME}-$(date +%F_%H-%M-%S).sql
+# mysqldump --add-drop-table -u$WPUSER -p$WPPASS $WPDB > ${BACKUP_PATH}db-${DOMAIN}-$(date +%F_%H-%M-%S).sql
 
 if [ "$2" != "" ]; then
 	if [ ! -e "/usr/local/bin/aws" ] ; then
 		echo; echo 'Did you run "pip install aws && aws configure"'; echo;
 	fi
 
-    /usr/local/bin/aws s3 cp ${SITE_PATH}/db-${SITE_NAME}-${CURRENT_DATE_TIME}.sql.gz s3://$2/${SITE_NAME}/backups/databases/
+    /usr/local/bin/aws s3 cp ${SITE_PATH}/db-${DOMAIN}-${CURRENT_DATE_TIME}.sql.gz s3://$2/${DOMAIN}/backups/databases/
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking offsite backup';
 		echo "Check $LOG_FILE for any log info"; echo

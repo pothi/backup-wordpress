@@ -98,7 +98,7 @@ if [ "$2" != "" ]; then
 		echo; echo 'Did you run "pip install aws && aws configure"'; echo;
 	fi
 
-    /usr/local/bin/aws s3 cp ${BACKUP_FILE_NAME}-1-$CURRENT_DATE_TIME.tar.gz s3://$2/${SITE_NAME}/backups/files/
+    /usr/local/bin/aws s3 cp ${BACKUP_FILE_NAME}-1-$CURRENT_DATE_TIME.tar.gz s3://$2/${DOMAIN}/backups/files/
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking offsite backup'; echo
 		echo "Check $LOG_FILE for any log info"; echo
