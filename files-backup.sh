@@ -7,7 +7,7 @@ TOTAL_BACKUPS=4
 # run 'pip install aws'
 # aws configure
 
-LOG_FILE=${HOME}log/backups.log
+LOG_FILE=${HOME}/log/backups.log
 exec > >(tee -a ${LOG_FILE} )
 exec 2> >(tee -a ${LOG_FILE} >&2)
 
@@ -26,7 +26,7 @@ exec 2> >(tee -a ${LOG_FILE} >&2)
 DOMAIN=
 
 if [ "$1" == "" ]; then
-    if [ -f "$HOME.my.exports" ]; then
+    if [ -f "$HOME/.my.exports" ]; then
         source ~/.my.exports
         DOMAIN=$MY_DOMAIN
     else
@@ -37,7 +37,7 @@ else
 fi
 
 # path to be backed up
-SITE_PATH=${HOME}sites/${DOMAIN}
+SITE_PATH=${HOME}/sites/${DOMAIN}
 if [ ! -d "$SITE_PATH" ]; then
 	echo 'Site is not found at '$SITE_PATH
 	exit 1
@@ -45,7 +45,7 @@ fi
 
 
 # where to store the backup file/s
-BACKUP_PATH=${HOME}Backup/files
+BACKUP_PATH=${HOME}/Backup/files
 if [ ! -d "$BACKUP_PATH" ] && [ "$(mkdir -p $BACKUP_PATH)" ]; then
 	echo 'BACKUP_PATH is not found at '$BACKUP_PATH
 	echo 'You may want to create it manually'
@@ -91,14 +91,14 @@ done
 # let's do it using tar
 # Create a fresh backup
 CURRENT_DATE_TIME=$(date +%F_%H-%M-%S)
-tar hczf ${BACKUP_FILE_NAME}-1-$CURRENT_DATE_TIME.tar.gz -C ${HOME}sites ${EXCLUDES} ${DOMAIN} &> /dev/null
+tar hczf ${BACKUP_FILE_NAME}-1-$CURRENT_DATE_TIME.tar.gz -C ${HOME}/sites ${EXCLUDES} ${DOMAIN} &> /dev/null
 
 if [ "$2" != "" ]; then
 	if [ ! -e "/usr/local/bin/aws" ] ; then
 		echo; echo 'Did you run "pip install aws && aws configure"'; echo;
 	fi
 
-    /usr/local/bin/aws s3 cp ${BACKUP_FILE_NAME}-1-$CURRENT_DATE_TIME.tar.gz s3://$2/backups/files/
+    /usr/local/bin/aws s3 cp ${BACKUP_FILE_NAME}-1-$CURRENT_DATE_TIME.tar.gz s3://$2/${SITE_NAME}/backups/files/
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking offsite backup'; echo
 		echo "Check $LOG_FILE for any log info"; echo

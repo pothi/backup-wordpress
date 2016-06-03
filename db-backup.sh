@@ -6,7 +6,7 @@
 # run 'pip install aws'
 # aws configure
 
-LOG_FILE=${HOME}log/backups.log
+LOG_FILE=${HOME}/log/backups.log
 exec > >(tee -a ${LOG_FILE} )
 exec 2> >(tee -a ${LOG_FILE} >&2)
 
@@ -17,7 +17,7 @@ DEFAULT_SITE="domainname.com"
 # WP_CONFIG_PATH=${HOME}/public_html/wp-config.php
 
 # where to store the backups?
-BACKUP_PATH=${HOME}Backup/databases
+BACKUP_PATH=${HOME}/Backup/databases
 
 #-------- Do NOT Edit Below This Line --------#
 
@@ -35,7 +35,7 @@ if [ "$1" == "" ]; then
 else
     SITE_NAME=$1
 fi
-SITE_PATH=${HOME}sites/$SITE_NAME
+SITE_PATH=${HOME}/sites/$SITE_NAME
 if [ ! -d "$SITE_PATH" ]; then
 	echo 'Site is not found at '$SITE_PATH; echo 'Usage db-backup.sh domainname.com (S3 bucket name)';
 	exit 1
@@ -93,7 +93,7 @@ if [ "$2" != "" ]; then
 		echo; echo 'Did you run "pip install aws && aws configure"'; echo;
 	fi
 
-    /usr/local/bin/aws s3 cp ${SITE_PATH}/db-${SITE_NAME}-${CURRENT_DATE_TIME}.sql.gz s3://$2/backups/databases/
+    /usr/local/bin/aws s3 cp ${SITE_PATH}/db-${SITE_NAME}-${CURRENT_DATE_TIME}.sql.gz s3://$2/${SITE_NAME}/backups/databases/
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking offsite backup';
 		echo "Check $LOG_FILE for any log info"; echo
