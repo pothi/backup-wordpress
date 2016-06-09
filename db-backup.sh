@@ -6,6 +6,8 @@
 # run 'pip install aws'
 # aws configure
 
+SCRIPT_NAME=db-backup.sh
+
 LOG_FILE=${HOME}/log/backups.log
 exec > >(tee -a ${LOG_FILE} )
 exec 2> >(tee -a ${LOG_FILE} >&2)
@@ -37,7 +39,7 @@ else
 fi
 SITE_PATH=${HOME}/sites/$DOMAIN
 if [ ! -d "$SITE_PATH" ]; then
-	echo 'Site is not found at '$SITE_PATH; echo 'Usage db-backup.sh domainname.com (S3 bucket name)';
+	echo 'Site is not found at '$SITE_PATH; echo "Usage ${SCRIPT_NAME} domainname.tld (S3 bucket name)";
 	exit 1
 fi
 
