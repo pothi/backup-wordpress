@@ -65,7 +65,7 @@ WPDB=`sed "s/[()',;]/ /g" $WP_CONFIG_PATH | grep DB_NAME | awk '{print $3}'`
 # echo 'Pass: '$WPPASS >> ~/log/clean-wp-transients.log
 
 echo 'Cleaning up transients in options table'
-$(which mysql) -vvv -u$WPUSER -p$WPPASS $WPDB -e 'DELETE FROM `'$WPPREFIX'options` WHERE `option_name` LIKE ('_transient_%');'
+$(which mysql) -vvv -u$WPUSER -p$WPPASS $WPDB -e 'DELETE FROM `'$WPPREFIX'options` WHERE `option_name` LIKE ("_transient_%");'
 $(which mysql) -vvv -u$WPUSER -p$WPPASS $WPDB -e 'DELETE FROM `'$WPPREFIX'options` WHERE `option_name` LIKE ("_site_transient_%");'
 
 echo 'Optimizing options table'
