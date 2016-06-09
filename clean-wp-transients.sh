@@ -30,6 +30,12 @@ if [ -f "${HOME}/sites/$DOMAIN/wp-config.php" ]; then
 else
     WP_CONFIG_PATH=${SITE_PATH}/wordpress/wp-config.php
 fi
+# if local-config.php presents, it takes precedence
+if [ -f "${HOME}/sites/$DOMAIN/local-config.php" ]; then
+    WP_CONFIG_PATH=${SITE_PATH}/local-config.php
+else
+    WP_CONFIG_PATH=${SITE_PATH}/wordpress/local-config.php
+fi
 # set the path to wp-config.php manually
 # WP_CONFIG_PATH="/var/www/yourdreamsite.com"
 
