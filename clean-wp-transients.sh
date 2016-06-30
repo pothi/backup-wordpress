@@ -10,7 +10,13 @@ LOG_FILE=${HOME}/log/clean-wp-transients.log
 exec > >(tee -a ${LOG_FILE} )
 exec 2> >(tee -a ${LOG_FILE} >&2)
 
-mkdir ~/log/ &> /dev/null
+#-------- Do NOT Edit Below This Line --------#
+
+# check if log directory exists
+if [ ! -d "${HOME}/log" ] && [ "$(mkdir -p ${HOME}/log)" ]; then
+    echo 'Log directory not found. Please create it manually and then re-run this script.'
+    exit 1
+fi 
 
 DEFAULT_SITE="domainname.com"
 

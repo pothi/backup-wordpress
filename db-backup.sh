@@ -23,6 +23,12 @@ BACKUP_PATH=${HOME}/Backup/databases
 
 #-------- Do NOT Edit Below This Line --------#
 
+# check if log directory exists
+if [ ! -d "${HOME}/log" ] && [ "$(mkdir -p ${HOME}/log)" ]; then
+    echo 'Log directory not found. Please create it manually and then re-run this script.'
+    exit 1
+fi 
+
 # create the dir to keep backups, if not exists
 # mkdir -p $BACKUP_PATH &> /dev/null
 if [ ! -d "$BACKUP_PATH" ] && [ "$(mkdir -p $BACKUP_PATH)" ]; then

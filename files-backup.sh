@@ -25,6 +25,14 @@ exec 2> >(tee -a ${LOG_FILE} >&2)
 
 DOMAIN=
 
+#-------- Do NOT Edit Below This Line --------#
+
+# check if log directory exists
+if [ ! -d "${HOME}/log" ] && [ "$(mkdir -p ${HOME}/log)" ]; then
+    echo 'Log directory not found'
+    exit 1
+fi 
+
 if [ "$1" == "" ]; then
     if [ -f "$HOME/.my.exports" ]; then
         source ~/.my.exports

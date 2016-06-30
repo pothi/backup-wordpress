@@ -6,6 +6,18 @@
 
 WP_CONFIG_PATH="/var/www/yourdreamsite.com"
 
+LOG_FILE=${HOME}/log/clean-wp-db.log
+exec > >(tee -a ${LOG_FILE} )
+exec 2> >(tee -a ${LOG_FILE} >&2)
+
+#-------- Do NOT Edit Below This Line --------#
+
+# check if log directory exists
+if [ ! -d "${HOME}/log" ] && [ "$(mkdir -p ${HOME}/log)" ]; then
+    echo 'Log directory not found'
+    exit 1
+fi 
+
 echo; echo "Collecting info about DB"; echo
 
 if [ ! -f "${WP_CONFIG_PATH}/wp-config.php" ]; then
@@ -22,47 +34,40 @@ WPPASS=`$(which sed) "s/[()',;]/ /g" ${WP_CONFIG_PATH}/wp-config.php | $(which g
 # echo 'Prefix: '$WPPREFIX
 # echo 'User: '$WPUSER
 # echo 'Pass: '$WPPASS
-# echo 'DB: '$WPDB >> ~/log/clean-wp-db.log
-# echo 'Prefix: '$WPPREFIX >> ~/log/clean-wp-db.log
-# echo 'User: '$WPUSER >> ~/log/clean-wp-db.log
-# echo 'Pass: '$WPPASS >> ~/log/clean-wp-db.log
+# echo 'DB: '$WPDB
+# echo 'Prefix: '$WPPREFIX
+# echo 'User: '$WPUSER
+# echo 'Pass: '$WPPASS
 
 mkdir ~/log/ &> /dev/null
 
-echo 'Date: '$(date +%F) >> ~/log/clean-wp-db.log
-echo 'Time: '$(date +%H-%M-%S) >> ~/log/clean-wp-db.log
+echo 'Date: '$(date +%F)
+echo 'Time: '$(date +%H-%M-%S)
 
 echo 'Cleaning up akismet junk in commentsmeta table'
-echo 'Cleaning up akismet junk in commentsmeta table' >> ~/log/clean-wp-db.log
-$(which mysql) -vvv -u$WPUSER -p$WPPASS $WPDB -e 'DELETE FROM '$WPPREFIX'commentmeta WHERE meta_key LIKE "%akismet%";' >> ~/log/clean-wp-db.log
+$(which mysql) -vvv -u$WPUSER -p$WPPASS $WPDB -e 'DELETE FROM '$WPPREFIX'commentmeta WHERE meta_key LIKE "%akismet%";'
 
 echo 'Cleaning up unconnected comments in commentsmeta table'
-echo 'Cleaning up unconnected comments in commentsmeta table' >> ~/log/clean-wp-db.log
-$(which mysql) -vvv -u$WPUSER -p$WPPASS $WPDB -e 'DELETE FROM '$WPPREFIX'commentmeta WHERE comment_id NOT IN ( SELECT comment_id FROM '$WPPREFIX'comments );' >> ~/log/clean-wp-db.log
+$(which mysql) -vvv -u$WPUSER -p$WPPASS $WPDB -e 'DELETE FROM '$WPPREFIX'commentmeta WHERE comment_id NOT IN ( SELECT comment_id FROM '$WPPREFIX'comments );'
 
 echo 'Cleaning up spam comments'
-echo 'Cleaning up spam comments' >> ~/log/clean-wp-db.log
-$(which mysql) -vvv -u$WPUSER -p$WPPASS $WPDB -e 'DELETE FROM '$WPPREFIX'comments WHERE '$WPPREFIX'comments.comment_approved = "spam";' >> ~/log/clean-wp-db.log
+$(which mysql) -vvv -u$WPUSER -p$WPPASS $WPDB -e 'DELETE FROM '$WPPREFIX'comments WHERE '$WPPREFIX'comments.comment_approved = "spam";'
 
 echo 'Cleaning up postmeta table'
-echo 'Cleaning up postmeta table' >> ~/log/clean-wp-db.log
-$(which mysql) -vvv -u$WPUSER -p$WPPASS $WPDB -e 'DELETE pm FROM '$WPPREFIX'postmeta pm LEFT JOIN '$WPPREFIX'posts wp ON wp.ID = pm.post_id WHERE wp.ID IS NULL;' >> ~/log/clean-wp-db.log
+$(which mysql) -vvv -u$WPUSER -p$WPPASS $WPDB -e 'DELETE pm FROM '$WPPREFIX'postmeta pm LEFT JOIN '$WPPREFIX'posts wp ON wp.ID = pm.post_id WHERE wp.ID IS NULL;'
 
 echo 'Cleaning up postmeta table'
-echo 'Cleaning up postmeta table' >> ~/log/clean-wp-db.log
-$(which mysql) -vvv -u$WPUSER -p$WPPASS $WPDB -e 'DELETE pm FROM '$WPPREFIX'postmeta pm LEFT JOIN '$WPPREFIX'posts wp ON wp.ID = pm.post_id WHERE wp.ID IS NULL;' >> ~/log/clean-wp-db.log
+$(which mysql) -vvv -u$WPUSER -p$WPPASS $WPDB -e 'DELETE pm FROM '$WPPREFIX'postmeta pm LEFT JOIN '$WPPREFIX'posts wp ON wp.ID = pm.post_id WHERE wp.ID IS NULL;'
 
 echo 'Cleaning up old revisions (of above 31 days)'
-echo 'Cleaning up old revisions (of above 31 days)' >> ~/log/clean-wp-db.log
-$(which mysql) -vvv -u$WPUSER -p$WPPASS $WPDB -e 'DELETE FROM `'$WPPREFIX'posts` WHERE `post_type` = "revision" AND `post_date` < DATE_SUB( CURDATE(), INTERVAL 31 DAY);' >> ~/log/clean-wp-db.log
+$(which mysql) -vvv -u$WPUSER -p$WPPASS $WPDB -e 'DELETE FROM `'$WPPREFIX'posts` WHERE `post_type` = "revision" AND `post_date` < DATE_SUB( CURDATE(), INTERVAL 31 DAY);'
 
 echo 'Optimizing tables'
-echo 'Optimizing tables' >> ~/log/clean-wp-db.log
-$(which mysql) -vvv -u$WPUSER -p$WPPASS $WPDB -e 'OPTIMIZE TABLE '$WPPREFIX'options;' >> ~/log/clean-wp-db.log
-$(which mysql) -vvv -u$WPUSER -p$WPPASS $WPDB -e 'OPTIMIZE TABLE '$WPPREFIX'commentmeta;' >> ~/log/clean-wp-db.log
-$(which mysql) -vvv -u$WPUSER -p$WPPASS $WPDB -e 'OPTIMIZE TABLE '$WPPREFIX'comments;' >> ~/log/clean-wp-db.log
-$(which mysql) -vvv -u$WPUSER -p$WPPASS $WPDB -e 'OPTIMIZE TABLE '$WPPREFIX'postmeta;' >> ~/log/clean-wp-db.log
-$(which mysql) -vvv -u$WPUSER -p$WPPASS $WPDB -e 'OPTIMIZE TABLE '$WPPREFIX'posts;' >> ~/log/clean-wp-db.log
-$(which mysqlcheck) -o -vvv -u$WPUSER -p$WPPASS $WPDB &>> ~/log/clean-wp-db.log
+$(which mysql) -vvv -u$WPUSER -p$WPPASS $WPDB -e 'OPTIMIZE TABLE '$WPPREFIX'options;'
+$(which mysql) -vvv -u$WPUSER -p$WPPASS $WPDB -e 'OPTIMIZE TABLE '$WPPREFIX'commentmeta;'
+$(which mysql) -vvv -u$WPUSER -p$WPPASS $WPDB -e 'OPTIMIZE TABLE '$WPPREFIX'comments;'
+$(which mysql) -vvv -u$WPUSER -p$WPPASS $WPDB -e 'OPTIMIZE TABLE '$WPPREFIX'postmeta;'
+$(which mysql) -vvv -u$WPUSER -p$WPPASS $WPDB -e 'OPTIMIZE TABLE '$WPPREFIX'posts;'
+$(which mysqlcheck) -o -vvv -u$WPUSER -p$WPPASS $WPDB
 
-echo; echo 'In case of an error, please look at the log file at ~/log/clean-wp-db.log'; echo
+echo; echo "In case of an error, please look at the log file at $LOG_FILE"; echo
