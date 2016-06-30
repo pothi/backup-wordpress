@@ -91,17 +91,20 @@ WPDB=`sed "s/[()',;]/ /g" $WP_CONFIG_PATH | grep DB_NAME | awk '{print $3}'`
 # create a backup using the information obtained through the above process
 # mysqldump --add-drop-table -u$WPUSER -p$WPPASS $WPDB | gzip > ${BACKUP_PATH}/db-${DOMAIN}-$(date +%F_%H-%M-%S).sql.gz
 CURRENT_DATE_TIME=$(date +%F_%H-%M-%S)
-mysqldump --add-drop-table -u$WPUSER -p$WPPASS $WPDB | gzip > ${SITE_PATH}/db-${DOMAIN}-${CURRENT_DATE_TIME}.sql.gz
+# convert forward slash found in sub-directories to hyphen
+# ex: example.com/test would become example.com-test
+DOMAIN_FULL_PATH=$(echo $DOMAIN | sed -n 's:/:-:gp')
+mysqldump --add-drop-table -u$WPUSER -p$WPPASS $WPDB | gzip > ${SITE_PATH}/db-${DOMAIN_FULL_PATH}-${CURRENT_DATE_TIME}.sql.gz
 
 # if gzip is not available
-# mysqldump --add-drop-table -u$WPUSER -p$WPPASS $WPDB > ${BACKUP_PATH}db-${DOMAIN}-$(date +%F_%H-%M-%S).sql
+# mysqldump --add-drop-table -u$WPUSER -p$WPPASS $WPDB > ${BACKUP_PATH}db-${DOMAIN_FULL_PATH}-$(date +%F_%H-%M-%S).sql
 
 if [ "$2" != "" ]; then
 	if [ ! -e "/usr/local/bin/aws" ] ; then
 		echo; echo 'Did you run "pip install aws && aws configure"'; echo;
 	fi
 
-    /usr/local/bin/aws s3 cp ${SITE_PATH}/db-${DOMAIN}-${CURRENT_DATE_TIME}.sql.gz s3://$2/${DOMAIN}/backups/databases/
+    /usr/local/bin/aws s3 cp ${SITE_PATH}/db-${DOMAIN_FULL_PATH}-${CURRENT_DATE_TIME}.sql.gz s3://$2/${DOMAIN_FULL_PATH}/backups/databases/
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking offsite backup';
 		echo "Check $LOG_FILE for any log info"; echo
@@ -109,5 +112,22 @@ if [ "$2" != "" ]; then
         echo; echo 'Offsite backup successful'; echo
     fi
 fi
+
+# Delete backups that are two months older
+MONTHSAGO=$(expr $(date +%m) - 2)
+case $MONTHSAGO in
+-1)
+	rm -f ${BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-$(expr $(date +%Y) -1)-11-*.sql.gz &> /dev/null
+	;;
+0)
+	rm -f ${BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-$(expr $(date +%Y) -1)-12-*.sql.gz &> /dev/null
+	;;
+*)
+	rm -f ${BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-$(date +%Y)-0$MONTHSAGO-*.sql.gz &> /dev/null
+	;;
+10)
+	rm -f ${BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-$(date +%Y)-10-*.sql.gz &> /dev/null
+	;;
+esac
 
 echo; echo 'DB backup done; please check the latest backup at '${SITE_PATH}' and the older backups at '${BACKUP_PATH}'.'; echo
