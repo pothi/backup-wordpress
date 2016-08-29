@@ -93,7 +93,7 @@ WPDB=`sed "s/[()',;]/ /g" $WP_CONFIG_PATH | grep DB_NAME | awk '{print $3}'`
 CURRENT_DATE_TIME=$(date +%F_%H-%M-%S)
 # convert forward slash found in sub-directories to hyphen
 # ex: example.com/test would become example.com-test
-DOMAIN_FULL_PATH=$(echo $DOMAIN | sed -n 's:/:-:gp')
+DOMAIN_FULL_PATH=$(echo $DOMAIN | awk '{gsub(/\//,"_")}; 1')
 mysqldump --add-drop-table -u$WPUSER -p$WPPASS $WPDB | gzip > ${SITE_PATH}/db-${DOMAIN_FULL_PATH}-${CURRENT_DATE_TIME}.sql.gz
 
 # if gzip is not available
