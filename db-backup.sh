@@ -1,6 +1,8 @@
 #!/bin/bash
 
-# version - 1.0
+# version - 1.0.1
+# changelog
+# v1.0.1 - fix syntax errors
 
 ### Variables - Please do not add trailing slash in the PATHs
 
