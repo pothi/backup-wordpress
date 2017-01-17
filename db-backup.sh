@@ -53,13 +53,13 @@ fi
 
 
 # Delete backups that are two months older
-MONTHSAGO=$(expr $(date +%m) - 2)
+MONTHSAGO=$(expr $(date +%-m) - 2)
 case $MONTHSAGO in
 -1)
-	rm -f ${BACKUP_PATH}/db-${DOMAIN}-$(expr $(date +%Y) -1)-11-*.sql.gz &> /dev/null
+	rm -f ${BACKUP_PATH}/db-${DOMAIN}-$(expr $(date +%Y) - 1)-11-*.sql.gz &> /dev/null
 	;;
 0)
-	rm -f ${BACKUP_PATH}/db-${DOMAIN}-$(expr $(date +%Y) -1)-12-*.sql.gz &> /dev/null
+	rm -f ${BACKUP_PATH}/db-${DOMAIN}-$(expr $(date +%Y) - 1)-12-*.sql.gz &> /dev/null
 	;;
 *)
 	rm -f ${BACKUP_PATH}/db-${DOMAIN}-$(date +%Y)-0$MONTHSAGO-*.sql.gz &> /dev/null
