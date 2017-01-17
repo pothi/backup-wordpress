@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# version - 1.0
+
 ### Variables - Please do not add trailing slash in the PATHs
 
 # if you'd like to enable offsite backup...
