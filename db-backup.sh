@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# version - 1.0.1
+# version - 1.0.2
 # changelog
+# v1.0.2 - remove duplicate code (to remove older backups)
 # v1.0.1 - fix syntax errors
 
 ### Variables - Please do not add trailing slash in the PATHs
@@ -41,7 +42,6 @@ if [ ! -d "$BACKUP_PATH" ] && [ "$(mkdir -p $BACKUP_PATH)" ]; then
 	exit 1
 fi
 
-
 if [ "$1" == "" ]; then
     DOMAIN=$DEFAULT_SITE
 else
@@ -52,24 +52,6 @@ if [ ! -d "$SITE_PATH" ]; then
 	echo 'Site is not found at '$SITE_PATH; echo "Usage ${SCRIPT_NAME} domainname.tld (S3 bucket name)";
 	exit 1
 fi
-
-
-# Delete backups that are two months older
-MONTHSAGO=$(expr $(date +%-m) - 2)
-case $MONTHSAGO in
--1)
-	rm -f ${BACKUP_PATH}/db-${DOMAIN}-$(expr $(date +%Y) - 1)-11-*.sql.gz &> /dev/null
-	;;
-0)
-	rm -f ${BACKUP_PATH}/db-${DOMAIN}-$(expr $(date +%Y) - 1)-12-*.sql.gz &> /dev/null
-	;;
-*)
-	rm -f ${BACKUP_PATH}/db-${DOMAIN}-$(date +%Y)-0$MONTHSAGO-*.sql.gz &> /dev/null
-	;;
-10)
-	rm -f ${BACKUP_PATH}/db-${DOMAIN}-$(date +%Y)-10-*.sql.gz &> /dev/null
-	;;
-esac
 
 # if exists, move the existing backup from $SITE_PATH to $BACKUP_PATH
 # then store the new backup to $SITE_PATH
@@ -118,19 +100,19 @@ if [ "$2" != "" ]; then
 fi
 
 # Delete backups that are two months older
-MONTHSAGO=$(expr $(date +%m) - 2)
+MONTHSAGO=$(expr $(date +%-m) - 2)
 case $MONTHSAGO in
 -1)
-	rm -f ${BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-$(expr $(date +%Y) -1)-11-*.sql.gz &> /dev/null
+	rm -f ${BACKUP_PATH}/db-${DOMAIN}-$(expr $(date +%Y) - 1)-11-*.sql.gz &> /dev/null
 	;;
 0)
-	rm -f ${BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-$(expr $(date +%Y) -1)-12-*.sql.gz &> /dev/null
+	rm -f ${BACKUP_PATH}/db-${DOMAIN}-$(expr $(date +%Y) - 1)-12-*.sql.gz &> /dev/null
 	;;
 *)
-	rm -f ${BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-$(date +%Y)-0$MONTHSAGO-*.sql.gz &> /dev/null
+	rm -f ${BACKUP_PATH}/db-${DOMAIN}-$(date +%Y)-0$MONTHSAGO-*.sql.gz &> /dev/null
 	;;
 10)
-	rm -f ${BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-$(date +%Y)-10-*.sql.gz &> /dev/null
+	rm -f ${BACKUP_PATH}/db-${DOMAIN}-$(date +%Y)-10-*.sql.gz &> /dev/null
 	;;
 esac
 
