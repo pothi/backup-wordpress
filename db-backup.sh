@@ -1,9 +1,14 @@
 #!/bin/bash
 
-# version - 1.0.3
+# version - 1.0.4
 # changelog
-# v1.0.2 - date 2017-03-06
-#   support for hard-coded variable $DOMAIN
+# v1.0.4
+#   - date 2017-03-06
+#   - support for hard-coded variable AWS S3 Bucket Name
+#   - support for environment files (.envrc / .env)
+# v1.0.3
+#   - date 2017-03-06
+#   - support for hard-coded variable $DOMAIN
 # v1.0.2 - remove duplicate code (to remove older backups)
 # v1.0.1 - fix syntax errors
 
@@ -19,8 +24,9 @@ LOG_FILE=${HOME}/log/backups.log
 exec > >(tee -a ${LOG_FILE} )
 exec 2> >(tee -a ${LOG_FILE} >&2)
 
-# You may hard-code the domain name here
+# You may hard-code the domain name and AWS S3 Bucket Name here
 DOMAIN=
+BUCKET_NAME=
 
 # path to wp-config.php file
 # WP_CONFIG_PATH=${HOME}/public_html/wp-config.php
@@ -45,16 +51,38 @@ if [ ! -d "$BACKUP_PATH" ] && [ "$(mkdir -p $BACKUP_PATH)" ]; then
 	exit 1
 fi
 
+if [ -f "$HOME/.my.exports"  ]; then
+    source ~/.my.exports
+fi
+if [ -f "$HOME/.envrc"  ]; then
+    source ~/.envrc
+fi
+if [ -f "$HOME/.env"  ]; then
+    source ~/.env
+fi
+
+# check for the variable/s in three places
+# 1 - hard-coded value
+# 2 - optional parameter while invoking the script
+# 3 - environment files
+
 if [ "$DOMAIN" == ""  ]; then
     if [ "$1" == "" ]; then
-        if [ -f "$HOME/.my.exports" ]; then
-            source ~/.my.exports
-            DOMAIN=$MY_DOMAIN
+        if [ "$WP_DOMAIN" != "" ]; then
+            DOMAIN=$WP_DOMAIN
         else
             echo 'Usage ${SCRIPT_NAME} example.com (S3 bucket name)'; exit 1
         fi
     else
         DOMAIN=$1
+    fi
+fi
+
+if [ "$BUCKET_NAME" == ""  ]; then
+    if [ "$2" != "" ]; then
+        BUCKET_NAME=$2
+    elif [ "$AWS_S3_BUCKET_NAME" != "" ]; then
+        BUCKET_NAME=$AWS_S3_BUCKET_NAME
     fi
 fi
 
@@ -90,12 +118,12 @@ mysqldump --add-drop-table -u$WPUSER -p$WPPASS $WPDB | gzip > ${SITE_PATH}/db-${
 # if gzip is not available
 # mysqldump --add-drop-table -u$WPUSER -p$WPPASS $WPDB > ${BACKUP_PATH}db-${DOMAIN_FULL_PATH}-$(date +%F_%H-%M-%S).sql
 
-if [ "$2" != "" ]; then
+if [ "$BUCKET_NAME" != "" ]; then
 	if [ ! -e "/usr/local/bin/aws" ] ; then
 		echo; echo 'Did you run "pip install aws && aws configure"'; echo;
 	fi
 
-    /usr/local/bin/aws s3 cp ${SITE_PATH}/db-${DOMAIN_FULL_PATH}-${CURRENT_DATE_TIME}.sql.gz s3://$2/${DOMAIN_FULL_PATH}/backups/databases/
+    /usr/local/bin/aws s3 cp ${SITE_PATH}/db-${DOMAIN_FULL_PATH}-${CURRENT_DATE_TIME}.sql.gz s3://$BUCKET_NAME/${DOMAIN_FULL_PATH}/backups/databases/
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking offsite backup';
 		echo "Check $LOG_FILE for any log info"; echo

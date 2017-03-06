@@ -1,10 +1,16 @@
 #!/bin/bash
 
-# version: 1.0.2
+# version: 1.0.4
 
 # Changelog
-# v1.0.2 - date 2017-03-06
-#   support for hard-coded variable $DOMAIN
+# v1.0.4
+#   - date 2017-03-06
+#   - support for hard-coded variable AWS S3 Bucket Name
+#   - support for environment files (.envrc / .env)
+#   - skipped version 1.0.3
+# v1.0.2
+#   - date 2017-03-06
+#   - support for hard-coded variable $DOMAIN
 
 # Variable
 TOTAL_BACKUPS=4
@@ -28,8 +34,9 @@ exec 2> >(tee -a ${LOG_FILE} >&2)
 # all-files-xyz-4-date.tar.gz (oldest backup)
 
 ### Variables
-
+# You may hard-code the domain name and AWS S3 Bucket Name here
 DOMAIN=
+BUCKET_NAME=
 
 #-------- Do NOT Edit Below This Line --------#
 
@@ -40,16 +47,38 @@ if [ ! -d "${HOME}/log" ] && [ "$(mkdir -p ${HOME}/log)" ]; then
     exit 1
 fi 
 
+if [ -f "$HOME/.my.exports"  ]; then
+    source ~/.my.exports
+fi
+if [ -f "$HOME/.envrc"  ]; then
+    source ~/.envrc
+fi
+if [ -f "$HOME/.env"  ]; then
+    source ~/.env
+fi
+
+# check for the variable/s in three places
+# 1 - hard-coded value
+# 2 - optional parameter while invoking the script
+# 3 - environment files
+
 if [ "$DOMAIN" == ""  ]; then
     if [ "$1" == "" ]; then
-        if [ -f "$HOME/.my.exports" ]; then
-            source ~/.my.exports
-            DOMAIN=$MY_DOMAIN
+        if [ "$WP_DOMAIN" != "" ]; then
+            DOMAIN=$WP_DOMAIN
         else
             echo 'Usage files-backup.sh domainname.com (S3 bucket name)'; exit 1
         fi
     else
         DOMAIN=$1
+    fi
+fi
+
+if [ "$BUCKET_NAME" == ""  ]; then
+    if [ "$2" != "" ]; then
+        BUCKET_NAME=$2
+    elif [ "$AWS_S3_BUCKET_NAME" != "" ]; then
+        BUCKET_NAME=$AWS_S3_BUCKET_NAME
     fi
 fi
 
@@ -110,12 +139,12 @@ done
 CURRENT_DATE_TIME=$(date +%F_%H-%M-%S)
 tar hczf ${BACKUP_FILE_NAME}-1-$CURRENT_DATE_TIME.tar.gz -C ${HOME}/sites ${EXCLUDES} ${DOMAIN} &> /dev/null
 
-if [ "$2" != "" ]; then
+if [ "$BUCKET_NAME" != "" ]; then
 	if [ ! -e "/usr/local/bin/aws" ] ; then
 		echo; echo 'Did you run "pip install aws && aws configure"'; echo;
 	fi
 
-    /usr/local/bin/aws s3 cp ${BACKUP_FILE_NAME}-1-$CURRENT_DATE_TIME.tar.gz s3://$2/${DOMAIN}/backups/files/
+    /usr/local/bin/aws s3 cp ${BACKUP_FILE_NAME}-1-$CURRENT_DATE_TIME.tar.gz s3://$BUCKET_NAME/${DOMAIN}/backups/files/
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking offsite backup'; echo
 		echo "Check $LOG_FILE for any log info"; echo
