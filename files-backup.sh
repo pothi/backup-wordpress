@@ -1,6 +1,10 @@
 #!/bin/bash
 
-# version: 1.0.1
+# version: 1.0.2
+
+# Changelog
+# v1.0.2 - date 2017-03-06
+#   support for hard-coded variable $DOMAIN
 
 # Variable
 TOTAL_BACKUPS=4
@@ -32,18 +36,21 @@ DOMAIN=
 # check if log directory exists
 if [ ! -d "${HOME}/log" ] && [ "$(mkdir -p ${HOME}/log)" ]; then
     echo 'Log directory not found'
+    echo "Please create it manually at $HOME/log and then re-run this script"
     exit 1
 fi 
 
-if [ "$1" == "" ]; then
-    if [ -f "$HOME/.my.exports" ]; then
-        source ~/.my.exports
-        DOMAIN=$MY_DOMAIN
+if [ "$DOMAIN" == ""  ]; then
+    if [ "$1" == "" ]; then
+        if [ -f "$HOME/.my.exports" ]; then
+            source ~/.my.exports
+            DOMAIN=$MY_DOMAIN
+        else
+            echo 'Usage files-backup.sh domainname.com (S3 bucket name)'; exit 1
+        fi
     else
-		echo 'Usage files-backup.sh domainname.com (S3 bucket name)'; exit 1
+        DOMAIN=$1
     fi
-else
-    DOMAIN=$1
 fi
 
 # path to be backed up

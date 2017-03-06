@@ -1,7 +1,9 @@
 #!/bin/bash
 
-# version - 1.0.2
+# version - 1.0.3
 # changelog
+# v1.0.2 - date 2017-03-06
+#   support for hard-coded variable $DOMAIN
 # v1.0.2 - remove duplicate code (to remove older backups)
 # v1.0.1 - fix syntax errors
 
@@ -17,8 +19,8 @@ LOG_FILE=${HOME}/log/backups.log
 exec > >(tee -a ${LOG_FILE} )
 exec 2> >(tee -a ${LOG_FILE} >&2)
 
-# The name of the site
-DEFAULT_SITE="domainname.com"
+# You may hard-code the domain name here
+DOMAIN=
 
 # path to wp-config.php file
 # WP_CONFIG_PATH=${HOME}/public_html/wp-config.php
@@ -30,27 +32,30 @@ BACKUP_PATH=${HOME}/Backup/databases
 
 # check if log directory exists
 if [ ! -d "${HOME}/log" ] && [ "$(mkdir -p ${HOME}/log)" ]; then
-    echo 'Log directory not found. Please create it manually and then re-run this script.'
+    echo 'Log directory not found'
+    echo "Please create it manually at $HOME/log and then re-run this script"
     exit 1
 fi 
 
 # create the dir to keep backups, if not exists
 # mkdir -p $BACKUP_PATH &> /dev/null
 if [ ! -d "$BACKUP_PATH" ] && [ "$(mkdir -p $BACKUP_PATH)" ]; then
-	echo 'BACKUP_PATH is not found at the expected path'
-	echo 'You may want to create it manually'
+	echo "BACKUP_PATH is not found at $BACKUP_PATH"
+	echo 'You may create it manually and then re-run this script'
 	exit 1
 fi
 
-if [ "$1" == "" ]; then
-    DOMAIN=$DEFAULT_SITE
-else
-    DOMAIN=$1
-fi
-SITE_PATH=${HOME}/sites/$DOMAIN
-if [ ! -d "$SITE_PATH" ]; then
-	echo 'Site is not found at '$SITE_PATH; echo "Usage ${SCRIPT_NAME} domainname.tld (S3 bucket name)";
-	exit 1
+if [ "$DOMAIN" == ""  ]; then
+    if [ "$1" == "" ]; then
+        if [ -f "$HOME/.my.exports" ]; then
+            source ~/.my.exports
+            DOMAIN=$MY_DOMAIN
+        else
+            echo 'Usage ${SCRIPT_NAME} example.com (S3 bucket name)'; exit 1
+        fi
+    else
+        DOMAIN=$1
+    fi
 fi
 
 # if exists, move the existing backup from $SITE_PATH to $BACKUP_PATH
