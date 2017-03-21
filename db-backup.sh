@@ -1,7 +1,10 @@
 #!/bin/bash
 
-# version - 1.0.4
+# version - 1.0.5
 # changelog
+# v1.0.5
+#   - date 2017-03-21
+#   - bring back SITE_PATH
 # v1.0.4
 #   - date 2017-03-06
 #   - support for hard-coded variable AWS S3 Bucket Name
@@ -84,6 +87,12 @@ if [ "$BUCKET_NAME" == ""  ]; then
     elif [ "$AWS_S3_BUCKET_NAME" != "" ]; then
         BUCKET_NAME=$AWS_S3_BUCKET_NAME
     fi
+fi
+
+SITE_PATH=${HOME}/sites/$DOMAIN
+if [ ! -d "$SITE_PATH" ]; then
+	echo 'Site is not found at '$SITE_PATH; echo "Usage ${SCRIPT_NAME} domainname.tld (S3 bucket name)";
+	exit 1
 fi
 
 # if exists, move the existing backup from $SITE_PATH to $BACKUP_PATH
