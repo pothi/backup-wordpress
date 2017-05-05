@@ -1,8 +1,13 @@
 #!/bin/bash
 
-# version: 1.0.4
+# version: 1.1
 
 # Changelog
+# v1.1
+#   - date 2017-05-05
+#   - moved to nightly backups
+#   - started excluding wp core files and uploads
+#   - uploads files are now synced, rather than taken as part of regular nightly backup
 # v1.0.4
 #   - date 2017-03-06
 #   - support for hard-coded variable AWS S3 Bucket Name
@@ -13,7 +18,7 @@
 #   - support for hard-coded variable $DOMAIN
 
 # Variable
-TOTAL_BACKUPS=4
+TOTAL_BACKUPS=31
 
 # if you'd like to enable offsite backup...
 # run 'pip install aws'
@@ -98,13 +103,33 @@ if [ ! -d "$BACKUP_PATH" ] && [ "$(mkdir -p $BACKUP_PATH)" ]; then
 	exit 1
 fi
 
+PUB_DIR=wordpress
 
 # path to be excluded from the backup
 # no trailing slash, please
 declare -A EXC_PATH
-EXC_PATH[1]=${DOMAIN}/wordpress/wp-content/cache
-EXC_PATH[2]=${DOMAIN}/wordpress/wp-content/object-cache.php
-EXC_PATH[3]=${DOMAIN}/wordpress/wp-content/debug.log
+EXC_PATH[1]=${DOMAIN}/${PUB_DIR}/wp-content/cache
+EXC_PATH[2]=${DOMAIN}/${PUB_DIR}/wp-content/object-cache.php
+EXC_PATH[3]=${DOMAIN}/${PUB_DIR}/wp-content/debug.log
+EXC_PATH[4]=${DOMAIN}/${PUB_DIR}/wp-content/uploads
+EXC_PATH[5]=${DOMAIN}/${PUB_DIR}/wp-admin
+EXC_PATH[6]=${DOMAIN}/${PUB_DIR}/wp-includes
+EXC_PATH[7]=${DOMAIN}/${PUB_DIR}/license.txt
+EXC_PATH[8]=${DOMAIN}/${PUB_DIR}/readme.html
+EXC_PATH[9]=${DOMAIN}/${PUB_DIR}/index.php
+EXC_PATH[10]=${DOMAIN}/${PUB_DIR}/wp-activate.php
+EXC_PATH[11]=${DOMAIN}/${PUB_DIR}/wp-blog-header.php
+EXC_PATH[12]=${DOMAIN}/${PUB_DIR}/wp-comments-post.php
+EXC_PATH[13]=${DOMAIN}/${PUB_DIR}/wp-cron.php
+EXC_PATH[14]=${DOMAIN}/${PUB_DIR}/wp-links-opml.php
+EXC_PATH[15]=${DOMAIN}/${PUB_DIR}/wp-load.php
+EXC_PATH[16]=${DOMAIN}/${PUB_DIR}/wp-login.php
+EXC_PATH[17]=${DOMAIN}/${PUB_DIR}/wp-mail.php
+EXC_PATH[18]=${DOMAIN}/${PUB_DIR}/wp-settings.php
+EXC_PATH[19]=${DOMAIN}/${PUB_DIR}/wp-signup.php
+EXC_PATH[20]=${DOMAIN}/${PUB_DIR}/wp-trackback.php
+EXC_PATH[21]=${DOMAIN}/${PUB_DIR}/xmlrpc.php
+EXC_PATH[22]=${DOMAIN}/${PUB_DIR}/wp-config-sample.php
 # need more? - just use the above format
 
 EXCLUDES=''
@@ -138,6 +163,9 @@ done
 # Create a fresh backup
 CURRENT_DATE_TIME=$(date +%F_%H-%M-%S)
 tar hczf ${BACKUP_FILE_NAME}-1-$CURRENT_DATE_TIME.tar.gz -C ${HOME}/sites ${EXCLUDES} ${DOMAIN} &> /dev/null
+
+# sync uploads directory
+rsync -avz ${HOME}/sites/${DOMAIN}/${PUB_DIR}/wp-content/uploads ~/Backup &> /dev/null
 
 if [ "$BUCKET_NAME" != "" ]; then
 	if [ ! -e "/usr/local/bin/aws" ] ; then
