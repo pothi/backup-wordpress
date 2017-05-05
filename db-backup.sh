@@ -1,7 +1,10 @@
 #!/bin/bash
 
-# version - 1.0.5
+# version - 1.1
 # changelog
+# v1.1
+#   - date 2017-05-05
+#   - switch from mysqldump to 'wp db' to take backups
 # v1.0.5
 #   - date 2017-03-21
 #   - bring back SITE_PATH
@@ -100,32 +103,20 @@ fi
 # to be taken as a backup by files-backup.sh script
 mv $SITE_PATH/db-*.sql.gz ${BACKUP_PATH}/ &> /dev/null
 
-if [ -f "${HOME}/sites/$DOMAIN/wp-config.php" ]; then
-    WP_CONFIG_PATH=${SITE_PATH}/wp-config.php
-else
-    WP_CONFIG_PATH=${SITE_PATH}/wordpress/wp-config.php
-fi
-
-if [ ! -f "$WP_CONFIG_PATH" ]; then
-	echo 'wp-config.php file is not found at the expected path'
-	exit 1
-fi
-
-# extract the password, username and name of the database from wp-config.php file
-WPPASS=$(sed "s/[()',;]/ /g" $WP_CONFIG_PATH | grep DB_PASSWORD | awk '{print $3}')
-WPUSER=$(sed "s/[()',;]/ /g" $WP_CONFIG_PATH | grep DB_USER | awk '{print $3}')
-WPDB=`sed "s/[()',;]/ /g" $WP_CONFIG_PATH | grep DB_NAME | awk '{print $3}'`
-
-# create a backup using the information obtained through the above process
-# mysqldump --add-drop-table -u$WPUSER -p$WPPASS $WPDB | gzip > ${BACKUP_PATH}/db-${DOMAIN}-$(date +%F_%H-%M-%S).sql.gz
 CURRENT_DATE_TIME=$(date +%F_%H-%M-%S)
+
 # convert forward slash found in sub-directories to hyphen
 # ex: example.com/test would become example.com-test
 DOMAIN_FULL_PATH=$(echo $DOMAIN | awk '{gsub(/\//,"_")}; 1')
-mysqldump --add-drop-table -u$WPUSER -p$WPPASS $WPDB | gzip > ${SITE_PATH}/db-${DOMAIN_FULL_PATH}-${CURRENT_DATE_TIME}.sql.gz
 
-# if gzip is not available
-# mysqldump --add-drop-table -u$WPUSER -p$WPPASS $WPDB > ${BACKUP_PATH}db-${DOMAIN_FULL_PATH}-$(date +%F_%H-%M-%S).sql
+OUTPUT_FILE_NAME=${SITE_PATH}/db-${DOMAIN_FULL_PATH}-${CURRENT_DATE_TIME}.sql.gz
+WP_CLI=/usr/local/bin/wp
+
+if [ -f '$WP_CLI' ]; then
+    $WP_CLI db export - | gzip > $OUTPUT_FILE_NAME
+else
+    echo 'Please install wp-cli and re-run this script'; exit 1;
+fi
 
 if [ "$BUCKET_NAME" != "" ]; then
 	if [ ! -e "/usr/local/bin/aws" ] ; then
