@@ -112,8 +112,8 @@ DOMAIN_FULL_PATH=$(echo $DOMAIN | awk '{gsub(/\//,"_")}; 1')
 OUTPUT_FILE_NAME=${SITE_PATH}/db-${DOMAIN_FULL_PATH}-${CURRENT_DATE_TIME}.sql.gz
 WP_CLI=/usr/local/bin/wp
 
-if [ -f '$WP_CLI' ]; then
-    $WP_CLI db export - | gzip > $OUTPUT_FILE_NAME
+if [ -f "$WP_CLI" ]; then
+    $WP_CLI --path=${SITE_PATH}/public db export - | gzip > $OUTPUT_FILE_NAME
 else
     echo 'Please install wp-cli and re-run this script'; exit 1;
 fi
