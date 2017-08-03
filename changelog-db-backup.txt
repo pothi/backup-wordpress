@@ -1,0 +1,23 @@
+# Changelog for db-backup.sh script
+
+# v1.1.1
+#   - date 2017-08-03
+#   - introduce additional variable
+#   - put variables at the top of the file
+#	- separate changelog file
+# v1.1
+#   - date 2017-05-05
+#   - switch from mysqldump to 'wp db' to take backups
+# v1.0.5
+#   - date 2017-03-21
+#   - bring back SITE_PATH
+# v1.0.4
+#   - date 2017-03-06
+#   - support for hard-coded variable AWS S3 Bucket Name
+#   - support for environment files (.envrc / .env)
+# v1.0.3
+#   - date 2017-03-06
+#   - support for hard-coded variable $DOMAIN
+# v1.0.2 - remove duplicate code (to remove older backups)
+# v1.0.1 - fix syntax errors
+

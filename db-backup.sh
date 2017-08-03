@@ -1,22 +1,6 @@
 #!/bin/bash
 
-# version - 1.1
-# changelog
-# v1.1
-#   - date 2017-05-05
-#   - switch from mysqldump to 'wp db' to take backups
-# v1.0.5
-#   - date 2017-03-21
-#   - bring back SITE_PATH
-# v1.0.4
-#   - date 2017-03-06
-#   - support for hard-coded variable AWS S3 Bucket Name
-#   - support for environment files (.envrc / .env)
-# v1.0.3
-#   - date 2017-03-06
-#   - support for hard-coded variable $DOMAIN
-# v1.0.2 - remove duplicate code (to remove older backups)
-# v1.0.1 - fix syntax errors
+# version - 1.1.1
 
 ### Variables - Please do not add trailing slash in the PATHs
 
@@ -40,7 +24,12 @@ BUCKET_NAME=
 # where to store the backups?
 BACKUP_PATH=${HOME}/Backup/databases
 
+WP_CLI=/usr/local/bin/wp
+PUBLIC_DIR=public
+
 #-------- Do NOT Edit Below This Line --------#
+
+CURRENT_DATE_TIME=$(date +%F_%H-%M-%S)
 
 # check if log directory exists
 if [ ! -d "${HOME}/log" ] && [ "$(mkdir -p ${HOME}/log)" ]; then
@@ -57,6 +46,7 @@ if [ ! -d "$BACKUP_PATH" ] && [ "$(mkdir -p $BACKUP_PATH)" ]; then
 	exit 1
 fi
 
+# get environment variables
 if [ -f "$HOME/.my.exports"  ]; then
     source ~/.my.exports
 fi
@@ -94,30 +84,29 @@ fi
 
 SITE_PATH=${HOME}/sites/$DOMAIN
 if [ ! -d "$SITE_PATH" ]; then
-	echo 'Site is not found at '$SITE_PATH; echo "Usage ${SCRIPT_NAME} domainname.tld (S3 bucket name)";
+	echo; echo 'Site is not found at '$SITE_PATH; echo "Usage ${SCRIPT_NAME} domainname.tld (S3 bucket name)"; echo;
 	exit 1
 fi
-
-# if exists, move the existing backup from $SITE_PATH to $BACKUP_PATH
-# then store the new backup to $SITE_PATH
-# to be taken as a backup by files-backup.sh script
-mv $SITE_PATH/db-*.sql.gz ${BACKUP_PATH}/ &> /dev/null
-
-CURRENT_DATE_TIME=$(date +%F_%H-%M-%S)
 
 # convert forward slash found in sub-directories to hyphen
 # ex: example.com/test would become example.com-test
 DOMAIN_FULL_PATH=$(echo $DOMAIN | awk '{gsub(/\//,"_")}; 1')
 
 OUTPUT_FILE_NAME=${SITE_PATH}/db-${DOMAIN_FULL_PATH}-${CURRENT_DATE_TIME}.sql.gz
-WP_CLI=/usr/local/bin/wp
 
+# if exists, move the existing backup from $SITE_PATH to $BACKUP_PATH
+# then store the new backup to $SITE_PATH
+# to be taken as a backup by files-backup.sh script
+mv $SITE_PATH/db-${DOMAIN_FULL_PATH}-[[:digit:]-_]*.sql.gz ${BACKUP_PATH}/ &> /dev/null
+
+# take actual DB backup
 if [ -f "$WP_CLI" ]; then
-    $WP_CLI --path=${SITE_PATH}/public db export - | gzip > $OUTPUT_FILE_NAME
+    $WP_CLI --path=${SITE_PATH}/${PUBLIC_DIR} db export - | gzip > $OUTPUT_FILE_NAME
 else
     echo 'Please install wp-cli and re-run this script'; exit 1;
 fi
 
+# external backup
 if [ "$BUCKET_NAME" != "" ]; then
 	if [ ! -e "/usr/local/bin/aws" ] ; then
 		echo; echo 'Did you run "pip install aws && aws configure"'; echo;
