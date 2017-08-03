@@ -18,18 +18,15 @@ exec 2> >(tee -a ${LOG_FILE} >&2)
 DOMAIN=
 BUCKET_NAME=
 
-# path to wp-config.php file
-# WP_CONFIG_PATH=${HOME}/public_html/wp-config.php
-
 # where to store the backups?
 BACKUP_PATH=${HOME}/Backup/databases
 
-WP_CLI=/usr/local/bin/wp
 PUBLIC_DIR=public
 
 #-------- Do NOT Edit Below This Line --------#
 
-CURRENT_DATE_TIME=$(date +%F_%H-%M-%S)
+declare -r wp_cli=/usr/local/bin/wp
+timestamp=$(date +%F_%H-%M-%S)
 
 # check if log directory exists
 if [ ! -d "${HOME}/log" ] && [ "$(mkdir -p ${HOME}/log)" ]; then
@@ -92,7 +89,7 @@ fi
 # ex: example.com/test would become example.com-test
 DOMAIN_FULL_PATH=$(echo $DOMAIN | awk '{gsub(/\//,"_")}; 1')
 
-OUTPUT_FILE_NAME=${SITE_PATH}/db-${DOMAIN_FULL_PATH}-${CURRENT_DATE_TIME}.sql.gz
+OUTPUT_FILE_NAME=${SITE_PATH}/db-${DOMAIN_FULL_PATH}-${timestamp}.sql.gz
 
 # if exists, move the existing backup from $SITE_PATH to $BACKUP_PATH
 # then store the new backup to $SITE_PATH
@@ -100,8 +97,8 @@ OUTPUT_FILE_NAME=${SITE_PATH}/db-${DOMAIN_FULL_PATH}-${CURRENT_DATE_TIME}.sql.gz
 mv $SITE_PATH/db-${DOMAIN_FULL_PATH}-[[:digit:]-_]*.sql.gz ${BACKUP_PATH}/ &> /dev/null
 
 # take actual DB backup
-if [ -f "$WP_CLI" ]; then
-    $WP_CLI --path=${SITE_PATH}/${PUBLIC_DIR} db export - | gzip > $OUTPUT_FILE_NAME
+if [ -f "$wp_cli" ]; then
+    $wp_cli --path=${SITE_PATH}/${PUBLIC_DIR} db export - | gzip > $OUTPUT_FILE_NAME
 else
     echo 'Please install wp-cli and re-run this script'; exit 1;
 fi
@@ -112,7 +109,7 @@ if [ "$BUCKET_NAME" != "" ]; then
 		echo; echo 'Did you run "pip install aws && aws configure"'; echo;
 	fi
 
-    /usr/local/bin/aws s3 cp ${SITE_PATH}/db-${DOMAIN_FULL_PATH}-${CURRENT_DATE_TIME}.sql.gz s3://$BUCKET_NAME/${DOMAIN_FULL_PATH}/backups/databases/
+    /usr/local/bin/aws s3 cp ${SITE_PATH}/db-${DOMAIN_FULL_PATH}-${timestamp}.sql.gz s3://$BUCKET_NAME/${DOMAIN_FULL_PATH}/backups/databases/
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking offsite backup';
 		echo "Check $LOG_FILE for any log info"; echo
