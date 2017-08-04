@@ -1,5 +1,8 @@
 # Changelog for db-backup.sh script
 
+# v1.1.2
+#	- date 2017-08-04
+#	- AWS CLI compatibility for CentOS
 # v1.1.1
 #   - date 2017-08-03
 #   - introduce additional variable

@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# version - 1.1.1
+# version - 1.1.2
 
 ### Variables - Please do not add trailing slash in the PATHs
 
-# if you'd like to enable offsite backup...
-# run 'pip install aws'
-# aws configure
+# To enable offsite backups...
+# run 'pip install awscli' (as root)
+# aws configure (as normal user)
 
 SCRIPT_NAME=db-backup.sh
 
@@ -26,7 +26,8 @@ PUBLIC_DIR=public
 #-------- Do NOT Edit Below This Line --------#
 
 declare -r wp_cli=/usr/local/bin/wp
-timestamp=$(date +%F_%H-%M-%S)
+declare -r aws_cli=$(which aws)
+declare -r timestamp=$(date +%F_%H-%M-%S)
 
 # check if log directory exists
 if [ ! -d "${HOME}/log" ] && [ "$(mkdir -p ${HOME}/log)" ]; then
@@ -94,7 +95,7 @@ OUTPUT_FILE_NAME=${SITE_PATH}/db-${DOMAIN_FULL_PATH}-${timestamp}.sql.gz
 # if exists, move the existing backup from $SITE_PATH to $BACKUP_PATH
 # then store the new backup to $SITE_PATH
 # to be taken as a backup by files-backup.sh script
-mv $SITE_PATH/db-${DOMAIN_FULL_PATH}-[[:digit:]-_]*.sql.gz ${BACKUP_PATH}/ &> /dev/null
+mv $SITE_PATH/db-${DOMAIN_FULL_PATH}-[-_[:digit:]]*.sql.gz ${BACKUP_PATH}/ &> /dev/null
 
 # take actual DB backup
 if [ -f "$wp_cli" ]; then
@@ -105,11 +106,11 @@ fi
 
 # external backup
 if [ "$BUCKET_NAME" != "" ]; then
-	if [ ! -e "/usr/local/bin/aws" ] ; then
+	if [ ! -e "$aws_cli" ] ; then
 		echo; echo 'Did you run "pip install aws && aws configure"'; echo;
 	fi
 
-    /usr/local/bin/aws s3 cp ${SITE_PATH}/db-${DOMAIN_FULL_PATH}-${timestamp}.sql.gz s3://$BUCKET_NAME/${DOMAIN_FULL_PATH}/backups/databases/
+    $aws_cli s3 cp ${SITE_PATH}/db-${DOMAIN_FULL_PATH}-${timestamp}.sql.gz s3://$BUCKET_NAME/${DOMAIN_FULL_PATH}/backups/databases/
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking offsite backup';
 		echo "Check $LOG_FILE for any log info"; echo
