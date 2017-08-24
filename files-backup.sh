@@ -103,7 +103,7 @@ if [ ! -d "$BACKUP_PATH" ] && [ "$(mkdir -p $BACKUP_PATH)" ]; then
 	exit 1
 fi
 
-PUB_DIR=wordpress
+PUB_DIR=public
 
 # path to be excluded from the backup
 # no trailing slash, please
