@@ -130,6 +130,14 @@ EXC_PATH[19]=${DOMAIN}/${PUB_DIR}/wp-signup.php
 EXC_PATH[20]=${DOMAIN}/${PUB_DIR}/wp-trackback.php
 EXC_PATH[21]=${DOMAIN}/${PUB_DIR}/xmlrpc.php
 EXC_PATH[22]=${DOMAIN}/${PUB_DIR}/wp-config-sample.php
+EXC_PATH[23]=${DOMAIN}/${PUB_DIR}/wp-atom.php
+EXC_PATH[24]=${DOMAIN}/${PUB_DIR}/wp-commentsrss2.php
+EXC_PATH[25]=${DOMAIN}/${PUB_DIR}/wp-feed.php
+EXC_PATH[26]=${DOMAIN}/${PUB_DIR}/wp-pass.php
+EXC_PATH[27]=${DOMAIN}/${PUB_DIR}/wp-rdf.php
+EXC_PATH[28]=${DOMAIN}/${PUB_DIR}/wp-register.php
+EXC_PATH[29]=${DOMAIN}/${PUB_DIR}/wp-rss2.php
+EXC_PATH[30]=${DOMAIN}/${PUB_DIR}/wp-rss.php
 # need more? - just use the above format
 
 EXCLUDES=''
