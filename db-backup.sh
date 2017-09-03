@@ -1,10 +1,12 @@
 #!/bin/bash
 
-# version - 1.1.2
+# version - 1.1.3
 
 ### Variables - Please do not add trailing slash in the PATHs
 
 # To enable offsite backups...
+# apt install awscli (or yum install awscli)
+# legacy method
 # run 'pip install awscli' (as root)
 # aws configure (as normal user)
 
@@ -19,7 +21,7 @@ DOMAIN=
 BUCKET_NAME=
 
 # where to store the backups?
-BACKUP_PATH=${HOME}/Backup/databases
+BACKUP_PATH=${HOME}/backups/databases
 
 PUBLIC_DIR=public
 

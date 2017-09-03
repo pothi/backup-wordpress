@@ -1,5 +1,9 @@
 # Changelog for db-backup.sh script
 
+# v1.1.3
+#	- date 2017-09-03
+#	- change the default directory name (from Backup to backups)
+#	- newer / simpler method to install awscli tools
 # v1.1.2
 #	- date 2017-08-04
 #	- AWS CLI compatibility for CentOS

@@ -1,8 +1,12 @@
 #!/bin/bash
 
-# version: 1.1
+# version: 1.1.1
 
 # Changelog
+# v1.1.1
+#   - date 2017-09-03
+#   - change the default dir name from Backup to backups
+#   - no more syncing by default
 # v1.1
 #   - date 2017-05-05
 #   - moved to nightly backups
@@ -96,7 +100,7 @@ fi
 
 
 # where to store the backup file/s
-BACKUP_PATH=${HOME}/Backup/files
+BACKUP_PATH=${HOME}/backups/files
 if [ ! -d "$BACKUP_PATH" ] && [ "$(mkdir -p $BACKUP_PATH)" ]; then
 	echo 'BACKUP_PATH is not found at '$BACKUP_PATH
 	echo 'You may want to create it manually'
@@ -173,7 +177,7 @@ CURRENT_DATE_TIME=$(date +%F_%H-%M-%S)
 tar hczf ${BACKUP_FILE_NAME}-1-$CURRENT_DATE_TIME.tar.gz -C ${HOME}/sites ${EXCLUDES} ${DOMAIN} &> /dev/null
 
 # sync uploads directory
-rsync -avz ${HOME}/sites/${DOMAIN}/${PUB_DIR}/wp-content/uploads ~/Backup &> /dev/null
+# rsync -avz ${HOME}/sites/${DOMAIN}/${PUB_DIR}/wp-content/uploads ~/backups/uploads &> /dev/null
 
 if [ "$BUCKET_NAME" != "" ]; then
 	if [ ! -e "/usr/local/bin/aws" ] ; then
