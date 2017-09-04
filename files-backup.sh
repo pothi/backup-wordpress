@@ -1,8 +1,11 @@
 #!/bin/bash
 
-# version: 1.1.1
+# version: 1.1.2
 
 # Changelog
+# v1.1.2
+#   - date 2017-09-04
+#   - dynamically find the location of aws cli
 # v1.1.1
 #   - date 2017-09-03
 #   - change the default dir name from Backup to backups
@@ -48,6 +51,8 @@ DOMAIN=
 BUCKET_NAME=
 
 #-------- Do NOT Edit Below This Line --------#
+
+declare -r aws_cli=$(which aws)
 
 # check if log directory exists
 if [ ! -d "${HOME}/log" ] && [ "$(mkdir -p ${HOME}/log)" ]; then
@@ -180,11 +185,11 @@ tar hczf ${BACKUP_FILE_NAME}-1-$CURRENT_DATE_TIME.tar.gz -C ${HOME}/sites ${EXCL
 # rsync -avz ${HOME}/sites/${DOMAIN}/${PUB_DIR}/wp-content/uploads ~/backups/uploads &> /dev/null
 
 if [ "$BUCKET_NAME" != "" ]; then
-	if [ ! -e "/usr/local/bin/aws" ] ; then
+	if [ ! -e "$aws_cli" ] ; then
 		echo; echo 'Did you run "pip install aws && aws configure"'; echo;
 	fi
 
-    /usr/local/bin/aws s3 cp ${BACKUP_FILE_NAME}-1-$CURRENT_DATE_TIME.tar.gz s3://$BUCKET_NAME/${DOMAIN}/backups/files/
+    $aws_cli s3 cp ${BACKUP_FILE_NAME}-1-$CURRENT_DATE_TIME.tar.gz s3://$BUCKET_NAME/${DOMAIN}/backups/files/
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking offsite backup'; echo
 		echo "Check $LOG_FILE for any log info"; echo
