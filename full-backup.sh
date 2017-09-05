@@ -115,7 +115,7 @@ done
 
 # For all sites
 # BACKUP_FILE_NAME=${BACKUP_PATH}all-files-$(hostname -f | awk -F $(hostname). '{print $2}')
-BACKUP_FILE_NAME=${BACKUP_PATH}/files-${DOMAIN}
+BACKUP_FILE_NAME=${BACKUP_PATH}/full-backup-${DOMAIN}
 
 # Remove the oldest file
 rm ${BACKUP_FILE_NAME}-$TOTAL_BACKUPS-* &> /dev/null
