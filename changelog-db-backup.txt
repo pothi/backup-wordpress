@@ -1,5 +1,8 @@
 # Changelog for db-backup.sh script
 
+# v1.1.4
+#	- date 2017-09-13
+#	- add 'add-drop-table' option while exporting db
 # v1.1.3
 #	- date 2017-09-03
 #	- change the default directory name (from Backup to backups)

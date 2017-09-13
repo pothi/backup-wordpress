@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# version - 1.1.3
+# version - 1.1.4
+# for changelog, please see the file named changelog-db-backup.txt
 
 ### Variables - Please do not add trailing slash in the PATHs
 
@@ -101,7 +102,7 @@ mv $SITE_PATH/db-${DOMAIN_FULL_PATH}-[-_[:digit:]]*.sql.gz ${BACKUP_PATH}/ &> /d
 
 # take actual DB backup
 if [ -f "$wp_cli" ]; then
-    $wp_cli --path=${SITE_PATH}/${PUBLIC_DIR} db export - | gzip > $OUTPUT_FILE_NAME
+    $wp_cli --path=${SITE_PATH}/${PUBLIC_DIR} db export --add-drop-table - | gzip > $OUTPUT_FILE_NAME
 else
     echo 'Please install wp-cli and re-run this script'; exit 1;
 fi
