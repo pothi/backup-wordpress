@@ -115,6 +115,7 @@ if [ -f "$wp_cli" ]; then
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking local backup!'
 		echo "Check $LOG_FILE for any further log info. Exiting now!"; echo; exit 2
+    fi
 else
     echo 'Please install wp-cli and re-run this script'; exit 1;
 fi
