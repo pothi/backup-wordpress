@@ -4,39 +4,44 @@ Backup-Wordpress
 Scripts to backup WordPress via (cPanel / Plesk) cron(tab)
 ----------------------------------------------------------
 
-There are plenty of plugins available to take backups within WordPress. However, this works outside WordPress. So, no conflicts with other plugins. :) Additionally, as these scripts work outside WordPress, there is no performance lag while running via cron.
+There are plenty of plugins available to take backups within WordPress. However, the scripts mentioned here work outside WordPress making them much more effective and efficient!
 
-### How to Implement it in cPanel
+## Features
 
-1. Create a folder named 'backups' in '/home/username/' folder. So, once, this folder is created the contents of the '/home/username/' would look something like this...
-    * ...
-    * ...
-    * .cpanel
-    * .trash
-    * **backups**
-    * etc
-    * ...
-    * ...
-    * perl5
-    * public_ftp
-    * **public_html**
-    * ...
-    * ...
-2. Create the following two folders in '/home/username/backups/'
-    * databases
-    * files
-3. Upload the following two files in '/home/username/backups/'
-    * databack-backup_nightly.sh
-    * files-backup_weekly.sh
-4. Edit those newly uploaded files to fit your specific site / configuration
-5. Create two cron jobs in cPanel with the following commands
-    * $(which bash) /home/username/backups/files-backup_weekly.sh >/dev/null 2>&1
-    * $(which bash) /home/username/backups/database-backup_nightly.sh >/dev/null 2>&1
-6. The above commands can be executed in whatever the schedule you like. As the name suggests, you can run...
-    * files-backup_weekly.sh on a weekly schedule
-    * database-backup_nightly.sh on a nightly schedule
+- No plugin to install. So, no plugin conflicts!
+- Single script to take backups of multiple sites.
+- Local and offline backups are supported.
 
-### Have Questions?
-Contact me (pothi) at https://www.tinywp.in/contact/
+## Requirements in the server
+
+- wp-cli
+- aws-cli (to take offline backups)
+- SSH access
+- mysqldump
+- tar
+
+## What does each backup script do?
+
+- db-backup.sh can take database backup with --add-drop-table option.
+- files-no-uploads.sh can take files backups without uploads folder to reduce the overall size of the backup. Ideal for nightly backups!
+- full-backup.sh can take full backup including database (that is named db.sql and is available at the WordPress core directory). Ideal for a weekly routine!
+
+## Where are the backups stored?
+
+- the local backups are stored in the directory named `~/backups/`. If it doesn't exist, the script/s would attempt to create it before execution.
+- the optional offline backups can be stored in AWS (for now). Support for other storage engines (especially for GCP) is coming soon!
+
+## How to take backups?
+
+- firstly, go through each script and fill-in the variables to fit your particular environment. Currently, it is assumed that the WordPress core is available at `~/sites/example,com/public`.
+- test the scripts using SSH before implementing it in system cron.
+
+### Can you implement it for me?
+
+Yes, I am available for work! [Contact me now!](https://www.tinywp.in/contact/).
+
+### Have questions or just wanted to say hi?
+
+Please ping me on [Twitter](https://twitter.com/pothi]) or [send me a message](https://www.tinywp.in/contact/).
 
 Suggestions, bug reports, issues, forks are always welcome!
