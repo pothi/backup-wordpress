@@ -126,7 +126,7 @@ if [ "$AWS_BUCKET" != "" ]; then
 		echo; echo 'Did you run "pip install aws && aws configure"'; echo;
 	fi
 
-    $aws_cli s3 cp ${BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-${timestamp}.sql.gz s3://$AWS_BUCKET/${DOMAIN_FULL_PATH}/backups/databases/
+    $aws_cli s3 cp ${BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-${timestamp}.sql.gz s3://$AWS_BUCKET/${DOMAIN_FULL_PATH}/databases/
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking offsite backup';
 		echo "Check $LOG_FILE for any log info"; echo

@@ -92,7 +92,7 @@ fi
 
 
 # where to store the backup file/s
-BACKUP_PATH=${HOME}/backups/files
+BACKUP_PATH=${HOME}/backups/full-backups
 if [ ! -d "$BACKUP_PATH" ] && [ "$(mkdir -p $BACKUP_PATH)" ]; then
 	echo "BACKUP_PATH is not found at $BACKUP_PATH. The script can't create it, either!"
 	echo 'You may want to create it manually'
@@ -143,7 +143,7 @@ if [ "$BUCKET_NAME" != "" ]; then
 		echo; echo 'Did you run "pip install aws && aws configure"'; echo;
 	fi
 
-    $aws_cli s3 cp ${FULL_BACKUP_FILE_NAME} s3://$BUCKET_NAME/${DOMAIN}/backups/files/
+    $aws_cli s3 cp ${FULL_BACKUP_FILE_NAME} s3://$BUCKET_NAME/${DOMAIN}/full-backup/
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking offsite backup'; echo
 		echo "Check $LOG_FILE for any log info"; echo
