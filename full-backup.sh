@@ -104,6 +104,7 @@ fi
 declare -A EXC_PATH
 EXC_PATH[1]=${DOMAIN}/${PUBLIC_DIR}/wp-content/cache
 EXC_PATH[2]=${DOMAIN}/${PUBLIC_DIR}/wp-content/debug.log
+EXC_PATH[3]=${DOMAIN}/${PUBLIC_DIR}/.git
 # need more? - just use the above format
 
 EXCLUDES=''
@@ -142,7 +143,7 @@ if [ "$BUCKET_NAME" != "" ]; then
 		echo; echo 'Did you run "pip install aws && aws configure"'; echo;
 	fi
 
-    $aws_cli s3 cp ${BACKUP_FILE_NAME} s3://$BUCKET_NAME/${DOMAIN}/backups/files/
+    $aws_cli s3 cp ${FULL_BACKUP_FILE_NAME} s3://$BUCKET_NAME/${DOMAIN}/backups/files/
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking offsite backup'; echo
 		echo "Check $LOG_FILE for any log info"; echo
@@ -155,5 +156,5 @@ fi
 find $BACKUP_PATH -type f -mtime +$AUTODELETEAFTER -exec rm {} \;
 
 echo; echo 'Files backup (without uploads) is done; please check the latest backup in '${BACKUP_PATH}'.';
-echo "Full path to the latest backup is ${BACKUP_FILE_NAME}"
+echo "Full path to the latest backup is ${FULL_BACKUP_FILE_NAME}"
 echo

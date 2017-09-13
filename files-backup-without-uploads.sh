@@ -113,7 +113,8 @@ fi
 declare -A EXC_PATH
 EXC_PATH[1]=${DOMAIN}/${PUBLIC_DIR}/wp-content/cache
 EXC_PATH[2]=${DOMAIN}/${PUBLIC_DIR}/wp-content/debug.log
-EXC_PATH[3]=${DOMAIN}/${PUBLIC_DIR}/wp-content/uploads
+EXC_PATH[3]=${DOMAIN}/${PUBLIC_DIR}/.git
+EXC_PATH[4]=${DOMAIN}/${PUBLIC_DIR}/wp-content/uploads
 # need more? - just use the above format
 
 EXCLUDES=''
