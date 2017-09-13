@@ -12,6 +12,7 @@ There are plenty of plugins available to take backups within WordPress. However,
 - Single script to take backups of multiple sites.
 - Separate script to take (nightly) files backup without uploads directory!
 - Local and offline backups are supported.
+- Support for sub-directory installation of WordPress!
 
 ## Requirements in the server
 

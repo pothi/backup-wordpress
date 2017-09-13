@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# version - 1.1.4
+# version - 1.2
 # for changelog, please see the file named changelog-db-backup.txt
 
 ### Variables - Please do not add trailing slash in the PATHs
@@ -11,24 +11,37 @@
 # run 'pip install awscli' (as root)
 # aws configure (as normal user)
 
+# where to store the database backups?
+BACKUP_PATH=${HOME}/backups/databases
+
+SITE_PATH=${HOME}/sites/$DOMAIN
+PUBLIC_DIR=public
+
+# auto delete older backups after certain number days - default 60. YMMV
+AUTODELETEAFTER=60
+
+# You may hard-code the domain name
+DOMAIN=
+
+# AWS Variable can be hard-coded here
+AWS_BUCKET=
+
+# ref: http://docs.aws.amazon.com/cli/latest/userguide/cli-environment.html
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_DEFAULT_REGION=
+AWS_PROFILE=
+
+#-------- Do NOT Edit Below This Line --------#
+
 SCRIPT_NAME=db-backup.sh
 
 LOG_FILE=${HOME}/log/backups.log
 exec > >(tee -a ${LOG_FILE} )
 exec 2> >(tee -a ${LOG_FILE} >&2)
 
-# You may hard-code the domain name and AWS S3 Bucket Name here
-DOMAIN=
-BUCKET_NAME=
-
-# where to store the backups?
-BACKUP_PATH=${HOME}/backups/databases
-
-PUBLIC_DIR=public
-
-#-------- Do NOT Edit Below This Line --------#
-
-declare -r wp_cli=/usr/local/bin/wp
+# declare -r wp_cli=/usr/local/bin/wp
+declare -r wp_cli=$(which wp)
 declare -r aws_cli=$(which aws)
 declare -r timestamp=$(date +%F_%H-%M-%S)
 
@@ -48,9 +61,6 @@ if [ ! -d "$BACKUP_PATH" ] && [ "$(mkdir -p $BACKUP_PATH)" ]; then
 fi
 
 # get environment variables
-if [ -f "$HOME/.my.exports"  ]; then
-    source ~/.my.exports
-fi
 if [ -f "$HOME/.envrc"  ]; then
     source ~/.envrc
 fi
@@ -75,30 +85,24 @@ if [ "$DOMAIN" == ""  ]; then
     fi
 fi
 
-if [ "$BUCKET_NAME" == ""  ]; then
-    if [ "$2" != "" ]; then
-        BUCKET_NAME=$2
-    elif [ "$AWS_S3_BUCKET_NAME" != "" ]; then
-        BUCKET_NAME=$AWS_S3_BUCKET_NAME
-    fi
-fi
-
-SITE_PATH=${HOME}/sites/$DOMAIN
 if [ ! -d "$SITE_PATH" ]; then
 	echo; echo 'Site is not found at '$SITE_PATH; echo "Usage ${SCRIPT_NAME} domainname.tld (S3 bucket name)"; echo;
 	exit 1
+fi
+
+if [ "$AWS_BUCKET" == ""  ]; then
+    if [ "$2" != "" ]; then
+        AWS_BUCKET=$2
+    elif [ "$AWS_S3_BUCKET_NAME" != "" ]; then
+        AWS_BUCKET=$AWS_S3_BUCKET_NAME
+    fi
 fi
 
 # convert forward slash found in sub-directories to hyphen
 # ex: example.com/test would become example.com-test
 DOMAIN_FULL_PATH=$(echo $DOMAIN | awk '{gsub(/\//,"_")}; 1')
 
-OUTPUT_FILE_NAME=${SITE_PATH}/db-${DOMAIN_FULL_PATH}-${timestamp}.sql.gz
-
-# if exists, move the existing backup from $SITE_PATH to $BACKUP_PATH
-# then store the new backup to $SITE_PATH
-# to be taken as a backup by files-backup.sh script
-mv $SITE_PATH/db-${DOMAIN_FULL_PATH}-[-_[:digit:]]*.sql.gz ${BACKUP_PATH}/ &> /dev/null
+OUTPUT_FILE_NAME=${BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-${timestamp}.sql.gz
 
 # take actual DB backup
 if [ -f "$wp_cli" ]; then
@@ -108,12 +112,12 @@ else
 fi
 
 # external backup
-if [ "$BUCKET_NAME" != "" ]; then
+if [ "$AWS_BUCKET" != "" ]; then
 	if [ ! -e "$aws_cli" ] ; then
 		echo; echo 'Did you run "pip install aws && aws configure"'; echo;
 	fi
 
-    $aws_cli s3 cp ${SITE_PATH}/db-${DOMAIN_FULL_PATH}-${timestamp}.sql.gz s3://$BUCKET_NAME/${DOMAIN_FULL_PATH}/backups/databases/
+    $aws_cli s3 cp ${BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-${timestamp}.sql.gz s3://$AWS_BUCKET/${DOMAIN_FULL_PATH}/backups/databases/
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking offsite backup';
 		echo "Check $LOG_FILE for any log info"; echo
@@ -122,21 +126,7 @@ if [ "$BUCKET_NAME" != "" ]; then
     fi
 fi
 
-# Delete backups that are two months older
-MONTHSAGO=$(expr $(date +%-m) - 2)
-case $MONTHSAGO in
--1)
-	rm -f ${BACKUP_PATH}/db-${DOMAIN}-$(expr $(date +%Y) - 1)-11-*.sql.gz &> /dev/null
-	;;
-0)
-	rm -f ${BACKUP_PATH}/db-${DOMAIN}-$(expr $(date +%Y) - 1)-12-*.sql.gz &> /dev/null
-	;;
-*)
-	rm -f ${BACKUP_PATH}/db-${DOMAIN}-$(date +%Y)-0$MONTHSAGO-*.sql.gz &> /dev/null
-	;;
-10)
-	rm -f ${BACKUP_PATH}/db-${DOMAIN}-$(date +%Y)-10-*.sql.gz &> /dev/null
-	;;
-esac
+# Auto delete backups 
+find $BACKUP_PATH -type f -mtime +$AUTODELETEAFTER -exec rm {} \;
 
-echo; echo 'DB backup done; please check the latest backup at '${SITE_PATH}' and the older backups at '${BACKUP_PATH}'.'; echo
+echo; echo 'DB backup done; please check the latest backup at '${BACKUP_PATH}'.'; echo

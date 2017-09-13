@@ -1,5 +1,11 @@
 # Changelog for db-backup.sh script
 
+# v2.0
+#	- date 2017-09-13
+#	- skip storing copy of the backup in ~/sites/example.com/
+#	- dynamically find the path to wp
+#	- remove older backups using a simple find command; props - @wpbullet
+#	- overall cleanup
 # v1.1.4
 #	- date 2017-09-13
 #	- add 'add-drop-table' option while exporting db
