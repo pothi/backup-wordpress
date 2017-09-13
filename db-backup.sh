@@ -14,7 +14,11 @@
 # where to store the database backups?
 BACKUP_PATH=${HOME}/backups/databases
 
-SITE_PATH=${HOME}/sites/$DOMAIN
+# the script assumes your sites are stored like ~/sites/example.com, ~/sites/example.net, ~/sites/example.org and so on.
+# if you have a different pattern, such as ~/app/example.com, please change the following to fit the server environment!
+SITES_PATH=${HOME}/sites
+
+# if WP is in a sub-directory, please leave this empty!
 PUBLIC_DIR=public
 
 # auto delete older backups after certain number days - default 60. YMMV
@@ -55,7 +59,7 @@ fi
 # create the dir to keep backups, if not exists
 # mkdir -p $BACKUP_PATH &> /dev/null
 if [ ! -d "$BACKUP_PATH" ] && [ "$(mkdir -p $BACKUP_PATH)" ]; then
-	echo "BACKUP_PATH is not found at $BACKUP_PATH"
+	echo "BACKUP_PATH is not found at $BACKUP_PATH . The script can't create it, either!"
 	echo 'You may create it manually and then re-run this script'
 	exit 1
 fi
@@ -85,8 +89,9 @@ if [ "$DOMAIN" == ""  ]; then
     fi
 fi
 
-if [ ! -d "$SITE_PATH" ]; then
-	echo; echo 'Site is not found at '$SITE_PATH; echo "Usage ${SCRIPT_NAME} domainname.tld (S3 bucket name)"; echo;
+WP_PATH=${SITES_PATH}/$DOMAIN/${PUBLIC_DIR}
+if [ ! -d "$WP_PATH" ]; then
+	echo; echo 'WordPress is not found at '$WP_PATH; echo "Usage ${SCRIPT_NAME} domainname.tld (S3 bucket name)"; echo;
 	exit 1
 fi
 
@@ -106,7 +111,10 @@ OUTPUT_FILE_NAME=${BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-${timestamp}.sql.gz
 
 # take actual DB backup
 if [ -f "$wp_cli" ]; then
-    $wp_cli --path=${SITE_PATH}/${PUBLIC_DIR} db export --add-drop-table - | gzip > $OUTPUT_FILE_NAME
+    $wp_cli --path=${WP_PATH} db export --add-drop-table - | gzip > $OUTPUT_FILE_NAME
+    if [ "$?" != "0" ]; then
+        echo; echo 'Something went wrong while taking local backup!'
+		echo "Check $LOG_FILE for any further log info. Exiting now!"; echo; exit 2
 else
     echo 'Please install wp-cli and re-run this script'; exit 1;
 fi
