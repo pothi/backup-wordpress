@@ -37,8 +37,7 @@ AUTODELETEAFTER=30
 SITES_PATH=${HOME}/sites
 
 # if WP is in a sub-directory, please leave this empty!
-# not-applicable for this script
-# PUBLIC_DIR=public
+PUBLIC_DIR=public
 
 ### Variables
 # You may hard-code the domain name and AWS S3 Bucket Name here
@@ -93,7 +92,7 @@ if [ "$BUCKET_NAME" == ""  ]; then
 fi
 
 # path to be backed up
-WP_PATH=${SITES_PATH}/${DOMAIN}
+WP_PATH=${SITES_PATH}/${DOMAIN}/${PUBLIC_DIR}
 if [ ! -d "$WP_PATH" ]; then
 	echo "$WP_PATH is not found. Please check the paths and adjust the variables in the script. Exiting now..."
 	exit 1
@@ -111,9 +110,9 @@ fi
 # path to be excluded from the backup
 # no trailing slash, please
 declare -A EXC_PATH
-EXC_PATH[1]=${WP_PATH}/wp-content/cache
-EXC_PATH[2]=${WP_PATH}/wp-content/debug.log
-EXC_PATH[3]=${WP_PATH}/wp-content/uploads
+EXC_PATH[1]=${DOMAIN}/${PUBLIC_DIR}/wp-content/cache
+EXC_PATH[2]=${DOMAIN}/${PUBLIC_DIR}/wp-content/debug.log
+EXC_PATH[3]=${DOMAIN}/${PUBLIC_DIR}/wp-content/uploads
 # need more? - just use the above format
 
 EXCLUDES=''
@@ -123,10 +122,6 @@ for i in "${!EXC_PATH[@]}" ; do
 	# remember the trailing space; we'll use it later
 done
 
-### Do not edit below this line ###
-
-# For all sites
-# BACKUP_FILE_NAME=${BACKUP_PATH}all-files-$(hostname -f | awk -F $(hostname). '{print $2}')
 BACKUP_FILE_NAME=${BACKUP_PATH}/files-without-uploads-${DOMAIN}-$CURRENT_DATE_TIME.tar.gz
 
 # let's do it using tar
