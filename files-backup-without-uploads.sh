@@ -51,6 +51,7 @@ exec > >(tee -a ${LOG_FILE} )
 exec 2> >(tee -a ${LOG_FILE} >&2)
 
 declare -r aws_cli=$(which aws)
+declare -r timestamp=$(date +%F_%H-%M-%S)
 
 # check if log directory exists
 if [ ! -d "${HOME}/log" ] && [ "$(mkdir -p ${HOME}/log)" ]; then
@@ -122,11 +123,10 @@ for i in "${!EXC_PATH[@]}" ; do
 	# remember the trailing space; we'll use it later
 done
 
-BACKUP_FILE_NAME=${BACKUP_PATH}/files-without-uploads-${DOMAIN}-$CURRENT_DATE_TIME.tar.gz
+BACKUP_FILE_NAME=${BACKUP_PATH}/files-without-uploads-${DOMAIN}-$timestamp.tar.gz
 
 # let's do it using tar
 # Create a fresh backup
-CURRENT_DATE_TIME=$(date +%F_%H-%M-%S)
 tar hczf ${BACKUP_FILE_NAME} -C ${SITES_PATH} ${EXCLUDES} ${DOMAIN} &> /dev/null
 
 if [ "$BUCKET_NAME" != "" ]; then
@@ -134,7 +134,7 @@ if [ "$BUCKET_NAME" != "" ]; then
 		echo; echo 'Did you run "pip install aws && aws configure"'; echo;
 	fi
 
-    $aws_cli s3 cp ${BACKUP_FILE_NAME}-1-$CURRENT_DATE_TIME.tar.gz s3://$BUCKET_NAME/${DOMAIN}/backups/files/
+    $aws_cli s3 cp ${BACKUP_FILE_NAME} s3://$BUCKET_NAME/${DOMAIN}/backups/files/
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking offsite backup'; echo
 		echo "Check $LOG_FILE for any log info"; echo
