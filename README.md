@@ -40,9 +40,13 @@ There are plenty of plugins available to take backups within WordPress. However,
 - most importantly, adjust the number of days to keep the backup, depending on the remaining hard disk space in your server!
 - test the scripts using SSH before implementing it in system cron.
 
-### Can you implement it for me?
+### Can you implement it on my server?
 
-Yes, [I am available for work!](https://www.tinywp.in/contact/).
+Yes, of course. But, for a small fee of USD 5 per server per site. [Reach out to me now!](https://www.tinywp.in/contact/).
+
+### I have a unique situation. Can you customize it to suit my particular environment?
+
+Possibly, yes. My hourly rate is USD 25 per hour, though.
 
 ### Have questions or just wanted to say hi?
 
