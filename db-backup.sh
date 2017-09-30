@@ -44,9 +44,8 @@ LOG_FILE=${HOME}/log/backups.log
 exec > >(tee -a ${LOG_FILE} )
 exec 2> >(tee -a ${LOG_FILE} >&2)
 
-# declare -r wp_cli=/usr/local/bin/wp
-declare -r wp_cli=$(which wp)
-declare -r aws_cli=$(which aws)
+declare -r wp_cli=/usr/local/bin/wp
+declare -r aws_cli=/usr/bin/aws
 declare -r timestamp=$(date +%F_%H-%M-%S)
 
 # check if log directory exists
@@ -59,9 +58,9 @@ fi
 # create the dir to keep backups, if not exists
 # mkdir -p $BACKUP_PATH &> /dev/null
 if [ ! -d "$BACKUP_PATH" ] && [ "$(mkdir -p $BACKUP_PATH)" ]; then
-	echo "BACKUP_PATH is not found at $BACKUP_PATH . The script can't create it, either!"
-	echo 'You may create it manually and then re-run this script'
-	exit 1
+    echo "BACKUP_PATH is not found at $BACKUP_PATH . The script can't create it, either!"
+    echo 'You may create it manually and then re-run this script'
+    exit 1
 fi
 
 # get environment variables
@@ -91,8 +90,8 @@ fi
 
 WP_PATH=${SITES_PATH}/$DOMAIN/${PUBLIC_DIR}
 if [ ! -d "$WP_PATH" ]; then
-	echo; echo 'WordPress is not found at '$WP_PATH; echo "Usage ${SCRIPT_NAME} domainname.tld (S3 bucket name)"; echo;
-	exit 1
+    echo; echo 'WordPress is not found at '$WP_PATH; echo "Usage ${SCRIPT_NAME} domainname.tld (S3 bucket name)"; echo;
+    exit 1
 fi
 
 if [ "$AWS_BUCKET" == ""  ]; then
@@ -114,7 +113,7 @@ if [ -f "$wp_cli" ]; then
     $wp_cli --path=${WP_PATH} db export --add-drop-table - | gzip > $DB_OUTPUT_FILE_NAME
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking local backup!'
-		echo "Check $LOG_FILE for any further log info. Exiting now!"; echo; exit 2
+        echo "Check $LOG_FILE for any further log info. Exiting now!"; echo; exit 2
     fi
 else
     echo 'Please install wp-cli and re-run this script'; exit 1;
@@ -122,14 +121,14 @@ fi
 
 # external backup
 if [ "$AWS_BUCKET" != "" ]; then
-	if [ ! -e "$aws_cli" ] ; then
-		echo; echo 'Did you run "pip install aws && aws configure"'; echo;
-	fi
+    if [ ! -e "$aws_cli" ] ; then
+        echo; echo 'Did you run "pip install aws && aws configure"'; echo;
+    fi
 
     $aws_cli s3 cp ${BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-${timestamp}.sql.gz s3://$AWS_BUCKET/${DOMAIN_FULL_PATH}/databases/
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking offsite backup';
-		echo "Check $LOG_FILE for any log info"; echo
+        echo "Check $LOG_FILE for any log info"; echo
     else
         echo; echo 'Offsite backup successful'; echo
     fi

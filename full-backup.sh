@@ -7,7 +7,7 @@
 #   - date 2017-09-13
 #   - change of script name
 #   - change the output file name
-#	- remove older backups using a simple find command; props - @wpbullet
+#   - remove older backups using a simple find command; props - @wpbullet
 #   - derived from files-backup-without-uploads.sh scripts
 
 # this script is basically
@@ -38,10 +38,10 @@ exec > >(tee -a ${LOG_FILE} )
 exec 2> >(tee -a ${LOG_FILE} >&2)
 
 #------------- from db-script.sh --------------#
-declare -r wp_cli=$(which wp)
+declare -r wp_cli=/usr/local/bin/wp
 #------------- end of snippet from db-script.sh --------------#
 
-declare -r aws_cli=$(which aws)
+declare -r aws_cli=/usr/bin/aws
 declare -r timestamp=$(date +%F_%H-%M-%S)
 
 # check if log directory exists
@@ -86,17 +86,17 @@ fi
 # path to be backed up
 WP_PATH=${SITES_PATH}/${DOMAIN}/${PUBLIC_DIR}
 if [ ! -d "$WP_PATH" ]; then
-	echo "$WP_PATH is not found. Please check the paths and adjust the variables in the script. Exiting now..."
-	exit 1
+    echo "$WP_PATH is not found. Please check the paths and adjust the variables in the script. Exiting now..."
+    exit 1
 fi
 
 
 # where to store the backup file/s
 BACKUP_PATH=${HOME}/backups/full-backups
 if [ ! -d "$BACKUP_PATH" ] && [ "$(mkdir -p $BACKUP_PATH)" ]; then
-	echo "BACKUP_PATH is not found at $BACKUP_PATH. The script can't create it, either!"
-	echo 'You may want to create it manually'
-	exit 1
+    echo "BACKUP_PATH is not found at $BACKUP_PATH. The script can't create it, either!"
+    echo 'You may want to create it manually'
+    exit 1
 fi
 
 # path to be excluded from the backup
@@ -109,9 +109,9 @@ EXC_PATH[3]=${DOMAIN}/${PUBLIC_DIR}/.git
 
 EXCLUDES=''
 for i in "${!EXC_PATH[@]}" ; do
-	CURRENT_EXC_PATH=${EXC_PATH[$i]}
-	EXCLUDES=${EXCLUDES}'--exclude='$CURRENT_EXC_PATH' '
-	# remember the trailing space; we'll use it later
+    CURRENT_EXC_PATH=${EXC_PATH[$i]}
+    EXCLUDES=${EXCLUDES}'--exclude='$CURRENT_EXC_PATH' '
+    # remember the trailing space; we'll use it later
 done
 
 #------------- from db-script.sh --------------#
@@ -122,7 +122,7 @@ if [ -f "$wp_cli" ]; then
     $wp_cli --path=${WP_PATH} db export --add-drop-table - | gzip > $DB_OUTPUT_FILE_NAME
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking local backup!'
-		echo "Check $LOG_FILE for any further log info. Exiting now!"; echo; exit 2
+        echo "Check $LOG_FILE for any further log info. Exiting now!"; echo; exit 2
     fi
 else
     echo 'Please install wp-cli and re-run this script'; exit 1;
@@ -139,14 +139,14 @@ tar hczf ${FULL_BACKUP_FILE_NAME} -C ${SITES_PATH} ${EXCLUDES} ${DOMAIN} &> /dev
 rm $DB_OUTPUT_FILE_NAME
 
 if [ "$BUCKET_NAME" != "" ]; then
-	if [ ! -e "$aws_cli" ] ; then
-		echo; echo 'Did you run "pip install aws && aws configure"'; echo;
-	fi
+    if [ ! -e "$aws_cli" ] ; then
+        echo; echo 'Did you run "pip install aws && aws configure"'; echo;
+    fi
 
     $aws_cli s3 cp ${FULL_BACKUP_FILE_NAME} s3://$BUCKET_NAME/${DOMAIN}/full-backup/
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking offsite backup'; echo
-		echo "Check $LOG_FILE for any log info"; echo
+        echo "Check $LOG_FILE for any log info"; echo
     else
         echo; echo 'Offsite backup successful'; echo
     fi

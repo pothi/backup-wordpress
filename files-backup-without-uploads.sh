@@ -7,7 +7,7 @@
 #   - date 2017-09-13
 #   - change of script name
 #   - change the output file name
-#	- remove older backups using a simple find command; props - @wpbullet
+#   - remove older backups using a simple find command; props - @wpbullet
 # v1.1.2
 #   - date 2017-09-04
 #   - dynamically find the location of aws cli
@@ -50,7 +50,7 @@ LOG_FILE=${HOME}/log/backups.log
 exec > >(tee -a ${LOG_FILE} )
 exec 2> >(tee -a ${LOG_FILE} >&2)
 
-declare -r aws_cli=$(which aws)
+declare -r aws_cli=/usr/bin/aws
 declare -r timestamp=$(date +%F_%H-%M-%S)
 
 # check if log directory exists
@@ -95,17 +95,17 @@ fi
 # path to be backed up
 WP_PATH=${SITES_PATH}/${DOMAIN}/${PUBLIC_DIR}
 if [ ! -d "$WP_PATH" ]; then
-	echo "$WP_PATH is not found. Please check the paths and adjust the variables in the script. Exiting now..."
-	exit 1
+    echo "$WP_PATH is not found. Please check the paths and adjust the variables in the script. Exiting now..."
+    exit 1
 fi
 
 
 # where to store the backup file/s
 BACKUP_PATH=${HOME}/backups/files-backup-without-uploads
 if [ ! -d "$BACKUP_PATH" ] && [ "$(mkdir -p $BACKUP_PATH)" ]; then
-	echo "BACKUP_PATH is not found at $BACKUP_PATH. The script can't create it, either!"
-	echo 'You may want to create it manually'
-	exit 1
+    echo "BACKUP_PATH is not found at $BACKUP_PATH. The script can't create it, either!"
+    echo 'You may want to create it manually'
+    exit 1
 fi
 
 # path to be excluded from the backup
@@ -119,9 +119,9 @@ EXC_PATH[4]=${DOMAIN}/${PUBLIC_DIR}/wp-content/uploads
 
 EXCLUDES=''
 for i in "${!EXC_PATH[@]}" ; do
-	CURRENT_EXC_PATH=${EXC_PATH[$i]}
-	EXCLUDES=${EXCLUDES}'--exclude='$CURRENT_EXC_PATH' '
-	# remember the trailing space; we'll use it later
+    CURRENT_EXC_PATH=${EXC_PATH[$i]}
+    EXCLUDES=${EXCLUDES}'--exclude='$CURRENT_EXC_PATH' '
+    # remember the trailing space; we'll use it later
 done
 
 BACKUP_FILE_NAME=${BACKUP_PATH}/files-without-uploads-${DOMAIN}-$timestamp.tar.gz
@@ -131,14 +131,14 @@ BACKUP_FILE_NAME=${BACKUP_PATH}/files-without-uploads-${DOMAIN}-$timestamp.tar.g
 tar hczf ${BACKUP_FILE_NAME} -C ${SITES_PATH} ${EXCLUDES} ${DOMAIN} &> /dev/null
 
 if [ "$BUCKET_NAME" != "" ]; then
-	if [ ! -e "$aws_cli" ] ; then
-		echo; echo 'Did you run "pip install aws && aws configure"'; echo;
-	fi
+    if [ ! -e "$aws_cli" ] ; then
+        echo; echo 'Did you run "pip install aws && aws configure"'; echo;
+    fi
 
     $aws_cli s3 cp ${BACKUP_FILE_NAME} s3://$BUCKET_NAME/${DOMAIN}/files-backup-without-uploads/
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking offsite backup'; echo
-		echo "Check $LOG_FILE for any log info"; echo
+        echo "Check $LOG_FILE for any log info"; echo
     else
         echo; echo 'Offsite backup successful'; echo
     fi
