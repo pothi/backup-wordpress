@@ -1,8 +1,8 @@
 Backup-Wordpress
 ================
 
-Scripts to backup WordPress via (cPanel / Plesk) cron(tab)
-----------------------------------------------------------
+Scripts to backup WordPress via server cron (cPanel, Plesk, etc)
+----------------------------------------------------------------
 
 There are plenty of plugins available to take backups within WordPress. However, the scripts mentioned here work outside WordPress making them much more effective and efficient!
 
@@ -12,15 +12,25 @@ There are plenty of plugins available to take backups within WordPress. However,
 - Single script to take backups of multiple sites.
 - Separate script to take (nightly) files backup without uploads directory!
 - Local and offline backups are supported.
+- Automatic deletion of local backups.
 - Support for sub-directory installation of WordPress!
+
+## Roadmap
+
+- Ability to choose the compression method.
+- take only local backups or only remote backups or both.
+- ability to remove local backups when taking only remote backups.
+- single script to take all sorts of backups.
+- close integration with wp-cli (probably as a plugin).
+- alert when local storage reaches a limit.
 
 ## Requirements in the server
 
 - wp-cli
-- aws-cli (to take offline backups)
+- aws-cli and/or gsutil (to take offline backups)
 - SSH access
 - mysqldump
-- tar
+- zip, tar, or bzip
 - enough disk space to hold local backups
 
 ## What does each backup script do?
@@ -31,8 +41,8 @@ There are plenty of plugins available to take backups within WordPress. However,
 
 ## Where are the backups stored?
 
-- the local backups are stored in the directory named `~/backups/`. If it doesn't exist, the script/s would attempt to create it before execution.
-- the optional offline backups can be stored in AWS (for now). Support for other storage engines (especially for GCP) is coming soon!
+- local backups are stored in the directory named `~/backups/`. If it doesn't exist, the script/s would attempt to create it before execution.
+- offline backups can be stored in AWS (for now). Support for other storage engines (especially for GCP) is coming soon!
 
 ## How to take backups?
 
