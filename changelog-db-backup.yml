@@ -1,0 +1,45 @@
+# Changelog for db-backup.sh script
+
+v2.1:
+    date: 2017-10-20
+    changes:
+        - fix for #14
+        - update hourly rate
+        - switch to yaml for changelog
+# v2.0
+#   - date 2017-09-13
+#   - skip storing copy of the backup in ~/sites/example.com/
+#   - dynamically find the path to wp
+#   - remove older backups using a simple find command; props - @wpbullet
+#   - overall cleanup
+# v1.1.4
+#   - date 2017-09-13
+#   - add 'add-drop-table' option while exporting db
+# v1.1.3
+#   - date 2017-09-03
+#   - change the default directory name (from Backup to backups)
+#   - newer / simpler method to install awscli tools
+# v1.1.2
+#   - date 2017-08-04
+#   - AWS CLI compatibility for CentOS
+# v1.1.1
+#   - date 2017-08-03
+#   - introduce additional variable
+#   - put variables at the top of the file
+#   - separate changelog file
+# v1.1
+#   - date 2017-05-05
+#   - switch from mysqldump to 'wp db' to take backups
+# v1.0.5
+#   - date 2017-03-21
+#   - bring back SITE_PATH
+# v1.0.4
+#   - date 2017-03-06
+#   - support for hard-coded variable AWS S3 Bucket Name
+#   - support for environment files (.envrc / .env)
+# v1.0.3
+#   - date 2017-03-06
+#   - support for hard-coded variable $DOMAIN
+# v1.0.2 - remove duplicate code (to remove older backups)
+# v1.0.1 - fix syntax errors
+

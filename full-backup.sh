@@ -37,12 +37,13 @@ LOG_FILE=${HOME}/log/backups.log
 exec > >(tee -a ${LOG_FILE} )
 exec 2> >(tee -a ${LOG_FILE} >&2)
 
-#------------- from db-script.sh --------------#
-declare -r wp_cli=/usr/local/bin/wp
-#------------- end of snippet from db-script.sh --------------#
+PATH=/bin:/usr/bin:/usr/local/bin
+export $PATH
 
-declare -r aws_cli=/usr/bin/aws
+declare -r wp_cli=`which wp`
+declare -r aws_cli=`which aws`
 declare -r timestamp=$(date +%F_%H-%M-%S)
+declare -r script_name=$(basename "$0")
 
 # check if log directory exists
 if [ ! -d "${HOME}/log" ] && [ "$(mkdir -p ${HOME}/log)" ]; then
@@ -68,7 +69,7 @@ if [ "$DOMAIN" == ""  ]; then
         if [ "$WP_DOMAIN" != "" ]; then
             DOMAIN=$WP_DOMAIN
         else
-            echo 'Usage files-backup.sh domainname.com (S3 bucket name)'; exit 1
+            echo "Usage $script_name domainname.com (S3 bucket name)"; exit 1
         fi
     else
         DOMAIN=$1

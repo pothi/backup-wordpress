@@ -56,7 +56,7 @@ Yes, of course. But, for a small fee of USD 5 per server per site. [Reach out to
 
 ### I have a unique situation. Can you customize it to suit my particular environment?
 
-Possibly, yes. My hourly rate is USD 25 per hour, though.
+Possibly, yes. My hourly rate is USD 50 per hour, though.
 
 ### Have questions or just wanted to say hi?
 

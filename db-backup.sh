@@ -38,14 +38,17 @@ AWS_PROFILE=
 
 #-------- Do NOT Edit Below This Line --------#
 
-SCRIPT_NAME=db-backup.sh
+script_name=$(basename "$0")
 
 LOG_FILE=${HOME}/log/backups.log
 exec > >(tee -a ${LOG_FILE} )
 exec 2> >(tee -a ${LOG_FILE} >&2)
 
-declare -r wp_cli=/usr/local/bin/wp
-declare -r aws_cli=/usr/bin/aws
+PATH=/bin:/usr/bin:/usr/local/bin
+export $PATH
+
+declare -r wp_cli=`which wp`
+declare -r aws_cli=`which aws`
 declare -r timestamp=$(date +%F_%H-%M-%S)
 
 # check if log directory exists
@@ -81,7 +84,7 @@ if [ "$DOMAIN" == ""  ]; then
         if [ "$WP_DOMAIN" != "" ]; then
             DOMAIN=$WP_DOMAIN
         else
-            echo 'Usage ${SCRIPT_NAME} example.com (S3 bucket name)'; exit 1
+            echo 'Usage ${script_name} example.com (S3 bucket name)'; exit 1
         fi
     else
         DOMAIN=$1
@@ -90,7 +93,7 @@ fi
 
 WP_PATH=${SITES_PATH}/$DOMAIN/${PUBLIC_DIR}
 if [ ! -d "$WP_PATH" ]; then
-    echo; echo 'WordPress is not found at '$WP_PATH; echo "Usage ${SCRIPT_NAME} domainname.tld (S3 bucket name)"; echo;
+    echo; echo 'WordPress is not found at '$WP_PATH; echo "Usage ${script_name} domainname.tld (S3 bucket name)"; echo;
     exit 1
 fi
 
