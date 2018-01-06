@@ -49,6 +49,15 @@ There are plenty of plugins available to take backups within WordPress. However,
 - firstly, go through each script and fill-in the variables to fit your particular environment. Currently, it is assumed that the WordPress core is available at `~/sites/example.com/public`.
 - most importantly, adjust the number of days to keep the backup, depending on the remaining hard disk space in your server!
 - test the scripts using SSH before implementing it in system cron.
+- note: you may take backups of multiple domains like the following...
+
+```
+/path/to/db-backup.sh example1.com
+/path/to/db-backup.sh example2.com
+/path/to/db-backup.sh example3.com
+```
+
+The above is applicable to all the scripts!
 
 ### Can you implement it on my server?
 
