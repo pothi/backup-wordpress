@@ -101,10 +101,15 @@ fi
 
 # path to be excluded from the backup
 # no trailing slash, please
+EXCLUDE_BASE_PATH=${DOMAIN}
+if [ "$PUBLIC_DIR" != "" ]; then
+    EXCLUDE_BASE_PATH=${EXCLUDE_BASE_PATH}/${PUBLIC_DIR}
+fi  
+
 declare -A EXC_PATH
-EXC_PATH[1]=${DOMAIN}/${PUBLIC_DIR}/wp-content/cache
-EXC_PATH[2]=${DOMAIN}/${PUBLIC_DIR}/wp-content/debug.log
-EXC_PATH[3]=${DOMAIN}/${PUBLIC_DIR}/.git
+EXC_PATH[1]=${EXCLUDE_BASE_PATH}/wp-content/cache
+EXC_PATH[2]=${EXCLUDE_BASE_PATH}/wp-content/debug.log
+EXC_PATH[3]=${EXCLUDE_BASE_PATH}/.git
 # need more? - just use the above format
 
 EXCLUDES=''
