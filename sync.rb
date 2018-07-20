@@ -1,3 +1,4 @@
+# no longer used - keeping it for historical reason
 # encoding: utf-8
 
 # It is assumed that common mail settings are already in config.rb
@@ -20,26 +21,26 @@ Backup::Model.new(:sync, 'Nightly Sync of uploads in domainname.com') do
     s3.region            = "us-east-1"
     s3.bucket            = "yourbucket"
 
-	# For first sync
+    # For first sync
     s3.path              = "sync"
-	# For yearly sync
+    # For yearly sync
     # s3.path              = "sync/uploads/"
-	
-	s3.mirror			 = true
-	# s3.concurrency_type  = :threads
-	# s3.concurrency_level = 25
-	s3.thread_count      = 10
+    
+    s3.mirror            = true
+    # s3.concurrency_type  = :threads
+    # s3.concurrency_level = 25
+    s3.thread_count      = 10
 
-	s3.directories do |directory|
-		# For first sync
-		directory.add "/home/client/sites/domainname.com/wordpress/wp-content/uploads/"
-		# For yearly sync
-		# directory.add "/home/client/sites/domainname.com/wordpress/wp-content/uploads/particularyear/"
-	end
+    s3.directories do |directory|
+        # For first sync
+        directory.add "/home/client/sites/domainname.com/wordpress/wp-content/uploads/"
+        # For yearly sync
+        # directory.add "/home/client/sites/domainname.com/wordpress/wp-content/uploads/particularyear/"
+    end
 
-	s3.fog_options = {
-		:path_style => true
-	}
+    s3.fog_options = {
+        :path_style => true
+    }
   end
 
   ##
