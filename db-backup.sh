@@ -50,6 +50,8 @@ declare -r wp_cli=`which wp`
 declare -r aws_cli=`which aws`
 declare -r timestamp=$(date +%F_%H-%M-%S)
 
+let AUTODELETEAFTER--
+
 # check if log directory exists
 if [ ! -d "${HOME}/log" ] && [ "$(mkdir -p ${HOME}/log)" ]; then
     echo 'Log directory not found'

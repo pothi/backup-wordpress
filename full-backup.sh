@@ -44,6 +44,8 @@ declare -r aws_cli=`which aws`
 declare -r timestamp=$(date +%F_%H-%M-%S)
 declare -r script_name=$(basename "$0")
 
+let AUTODELETEAFTER--
+
 # check if log directory exists
 if [ ! -d "${HOME}/log" ] && [ "$(mkdir -p ${HOME}/log)" ]; then
     echo "Log directory not found. The script can't create it, either!"

@@ -4,7 +4,6 @@ v2.1:
     date: 2017-10-20
     changes:
         - fix for #14
-        - update hourly rate
         - switch to yaml for changelog
 # v2.0
 #   - date 2017-09-13
