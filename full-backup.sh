@@ -184,9 +184,9 @@ if [ "$BUCKET_NAME" != "" ]; then
         echo; echo 'Did you run "pip install aws && aws configure"'; echo;
     fi
     if [[ $PASSPHRASE != "" ]]; then
-        $aws_cli s3 cp ${FULL_BACKUP_FILE_NAME} s3://$BUCKET_NAME/${DOMAIN}/full-backup/
-    else
         $aws_cli s3 cp ${ENCRYPTED_FULL_BACKUP_FILE_NAME} s3://$BUCKET_NAME/${DOMAIN}/full-backup/
+    else
+        $aws_cli s3 cp ${FULL_BACKUP_FILE_NAME} s3://$BUCKET_NAME/${DOMAIN}/full-backup/
     fi
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking offsite backup'; echo
