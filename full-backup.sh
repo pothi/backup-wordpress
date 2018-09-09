@@ -16,6 +16,9 @@
 
 ### Variables ###
 
+# a passphrase for encryption, in order to being able to use almost any special characters use ""
+PASSPHRASE="{[YourSuperS3cr&tPassPhr@Here]#()"
+
 # auto delete older backups after certain number days - default 30. YMMV
 AUTODELETEAFTER=30
 
@@ -101,6 +104,14 @@ if [ ! -d "$BACKUP_PATH" ] && [ "$(mkdir -p $BACKUP_PATH)" ]; then
     exit 1
 fi
 
+# where to store the encrypted backup file/s
+ENCRYPTED_BACKUP_PATH=${HOME}/backups/encrypted-backups
+if [ ! -d "$ENCRYPTED_BACKUP_PATH" ] && [ "$(mkdir -p $ENCRYPTED_BACKUP_PATH)" ]; then
+    echo "ENCRYPTED_BACKUP_PATH is not found at $ENCRYPTED_BACKUP_PATH. The script can't create it, either!"
+    echo 'You may want to create it manually'
+    exit 1
+fi
+
 # path to be excluded from the backup
 # no trailing slash, please
 EXCLUDE_BASE_PATH=${DOMAIN}
@@ -145,12 +156,38 @@ tar hczf ${FULL_BACKUP_FILE_NAME} -C ${SITES_PATH} ${EXCLUDES} ${DOMAIN} &> /dev
 # remove the reduntant DB backup
 rm $DB_OUTPUT_FILE_NAME
 
+# let's encrypt everything with a passphrase before sending to AWS 
+# this is a simple encryption using gpg
+ENCRYPTED_FULL_BACKUP_FILE_NAME=${ENCRYPTED_BACKUP_PATH}/full-backup-${DOMAIN}-$timestamp.tar.gz.gpg
+
+if [[ $PASSPHRASE != "" ]]; then
+    # using symmetric encryption
+    # option --batch to avoid passphrase prompt
+    # encrypting database dump
+    gpg --symmetric --passphrase $PASSPHRASE --batch -o ${ENCRYPTED_FULL_BACKUP_FILE_NAME} ${FULL_BACKUP_FILE_NAME}
+    if [ "$?" != "0" ]; then
+        echo; echo 'Something went wrong while encrypting full backup'; echo
+        echo "Check $LOG_FILE for any log info"; echo
+    else
+        echo; echo 'Backup successfully encrypted'; echo
+    fi
+elif ["$BUCKET_NAME" != ""]; then
+    echo "No PASSPHRASE provided!"
+    echo "You may want to encrypt your backup before storing them on S3"
+    echo "[WARNING]"
+    echo "If your data came from Europe check GDPR compliance"
+fi
+
+# send backup to AWS S3 bucket
 if [ "$BUCKET_NAME" != "" ]; then
     if [ ! -e "$aws_cli" ] ; then
         echo; echo 'Did you run "pip install aws && aws configure"'; echo;
     fi
-
-    $aws_cli s3 cp ${FULL_BACKUP_FILE_NAME} s3://$BUCKET_NAME/${DOMAIN}/full-backup/
+    if [[ $PASSPHRASE != "" ]]; then
+        $aws_cli s3 cp ${FULL_BACKUP_FILE_NAME} s3://$BUCKET_NAME/${DOMAIN}/full-backup/
+    else
+        $aws_cli s3 cp ${ENCRYPTED_FULL_BACKUP_FILE_NAME} s3://$BUCKET_NAME/${DOMAIN}/full-backup/
+    fi
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking offsite backup'; echo
         echo "Check $LOG_FILE for any log info"; echo
@@ -161,6 +198,7 @@ fi
 
 # Auto delete backups 
 find $BACKUP_PATH -type f -mtime +$AUTODELETEAFTER -exec rm {} \;
+find $ENCRYPTED_BACKUP_PATH -type f -mtime +$AUTODELETEAFTER -exec rm {} \;
 
 echo; echo 'Files backup (without uploads) is done; please check the latest backup in '${BACKUP_PATH}'.';
 echo "Full path to the latest backup is ${FULL_BACKUP_FILE_NAME}"
