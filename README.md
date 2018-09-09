@@ -27,11 +27,12 @@ There are plenty of plugins available to take backups within WordPress. However,
 ## Requirements in the server
 
 - wp-cli
-- aws-cli and/or gsutil (to take offline backups)
+- aws-cli and/or gsutil (optional, to take offline backups)
 - SSH access
 - mysqldump
 - zip, tar, or bzip
 - enough disk space to hold local backups
+- [gpg](https://www.gnupg.org/index.html) for encrypted backups (optional, but helps to comply with GDPR).
 
 ## What does each backup script do?
 
@@ -47,7 +48,7 @@ There are plenty of plugins available to take backups within WordPress. However,
 ## How to take backups?
 
 - firstly, go through each script and fill-in the variables to fit your particular environment. Currently, it is assumed that the WordPress core is available at `~/sites/example.com/public`.
-- most importantly, adjust the number of days to keep the backup, depending on the remaining hard disk space in your server!
+- please adjust the number of days to keep the backup, depending on the remaining hard disk space in your server.
 - test the scripts using SSH before implementing it in system cron.
 - note: you may take backups of multiple domains like the following...
 
@@ -58,6 +59,13 @@ There are plenty of plugins available to take backups within WordPress. However,
 ```
 
 The above is applicable to all the scripts!
+
+## Contributors
+
+The following people have contributed to this repo in various ways...
+
+- [Nik](https://github.com/nik-lampe)
+- [Cicciodev](https://github.com/Cicciodev)
 
 ### Can you implement it on my server?
 
