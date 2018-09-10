@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# version - 1.2
-# for changelog, please see the file named changelog-db-backup.txt
+# version - 3
 
 ### Variables - Please do not add trailing slash in the PATHs
 
@@ -13,6 +12,7 @@
 
 # where to store the database backups?
 BACKUP_PATH=${HOME}/backups/databases
+ENCRYPTED_BACKUP_PATH=${HOME}/backups/encrypted-db-backups
 
 # the script assumes your sites are stored like ~/sites/example.com, ~/sites/example.net, ~/sites/example.org and so on.
 # if you have a different pattern, such as ~/app/example.com, please change the following to fit the server environment!
@@ -20,6 +20,9 @@ SITES_PATH=${HOME}/sites
 
 # if WP is in a sub-directory, please leave this empty!
 PUBLIC_DIR=public
+
+# a passphrase for encryption, in order to being able to use almost any special characters use ""
+PASSPHRASE=
 
 # auto delete older backups after certain number days - default 60. YMMV
 AUTODELETEAFTER=60
@@ -60,11 +63,18 @@ if [ ! -d "${HOME}/log" ] && [ "$(mkdir -p ${HOME}/log)" ]; then
 fi 
 
 # create the dir to keep backups, if not exists
-# mkdir -p $BACKUP_PATH &> /dev/null
-if [ ! -d "$BACKUP_PATH" ] && [ "$(mkdir -p $BACKUP_PATH)" ]; then
-    echo "BACKUP_PATH is not found at $BACKUP_PATH . The script can't create it, either!"
-    echo 'You may create it manually and then re-run this script'
-    exit 1
+if [ -z "$PASSPHRASE" ] ; then
+    if [ ! -d "$BACKUP_PATH" ] && [ "$(mkdir -p $BACKUP_PATH)" ]; then
+        echo "BACKUP_PATH is not found at $BACKUP_PATH. The script can't create it, either!"
+        echo 'You may want to create it manually'
+        exit 1
+    fi
+else
+    if [ ! -d "$encrypted_backup_path" ] && [ "$(mkdir -p $encrypted_backup_path)" ]; then
+        echo "encrypted_backup_path is not found at $encrypted_backup_path. the script can't create it, either!"
+        echo 'you may want to create it manually'
+        exit 1
+    fi
 fi
 
 # get environment variables
@@ -111,10 +121,15 @@ fi
 DOMAIN_FULL_PATH=$(echo $DOMAIN | awk '{gsub(/\//,"_")}; 1')
 
 DB_OUTPUT_FILE_NAME=${BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-${timestamp}.sql.gz
+ENCRYPTED_DB_OUTPUT_FILE_NAME=${ENCRYPTED_BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-${timestamp}.sql.gz
 
 # take actual DB backup
 if [ -f "$wp_cli" ]; then
     $wp_cli --path=${WP_PATH} db export --add-drop-table - | gzip > $DB_OUTPUT_FILE_NAME
+    if [ ! -z "$PASSPHRASE" ] ; then
+        gpg --symmetric --passphrase $PASSPHRASE --batch -o ${ENCRYPTED_DB_OUTPUT_FILE_NAME} $DB_OUTPUT_FILE_NAME
+        rm $DB_OUTPUT_FILE_NAME
+    fi
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking local backup!'
         echo "Check $LOG_FILE for any further log info. Exiting now!"; echo; exit 2
@@ -129,7 +144,11 @@ if [ "$AWS_BUCKET" != "" ]; then
         echo; echo 'Did you run "pip install aws && aws configure"'; echo;
     fi
 
-    $aws_cli s3 cp ${BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-${timestamp}.sql.gz s3://$AWS_BUCKET/${DOMAIN_FULL_PATH}/databases/
+    if [ -z "$PASSPHRASE" ] ; then
+        $aws_cli s3 cp ${BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-${timestamp}.sql.gz s3://$AWS_BUCKET/${DOMAIN_FULL_PATH}/databases/
+    else
+        $aws_cli s3 cp ${ENCRYPTED_BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-${timestamp}.sql.gz s3://$AWS_BUCKET/${DOMAIN_FULL_PATH}/databases/
+    fi
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking offsite backup';
         echo "Check $LOG_FILE for any log info"; echo
@@ -141,4 +160,8 @@ fi
 # Auto delete backups 
 find $BACKUP_PATH -type f -mtime +$AUTODELETEAFTER -exec rm {} \;
 
-echo; echo 'DB backup done; please check the latest backup at '${BACKUP_PATH}'.'; echo
+if [ -z "$PASSPHRASE" ] ; then
+    echo; echo 'DB backup is done; please check the latest backup at '${BACKUP_PATH}'.'; echo
+else
+    echo; echo 'DB backup is done; please check the latest backup at '${ENCRYPTED_BACKUP_PATH}'.'; echo
+fi
