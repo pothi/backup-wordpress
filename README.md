@@ -4,7 +4,7 @@ Backup-Wordpress
 Scripts to backup WordPress via server cron (cPanel, Plesk, etc)
 ----------------------------------------------------------------
 
-There are plenty of plugins available to take backups within WordPress. However, the scripts mentioned here work outside WordPress making them much more effective and efficient!
+There are plenty of plugins available to take backups within WordPress. However, the scripts mentioned here work outside WordPress making them much more effective and efficient. If you take offline backups, I highly recommend to use encryption and limit your offline storage to only allow [one-way backups](https://www.tinywp.com/write-only-backups-in-s3/).
 
 ## Features
 
@@ -14,6 +14,7 @@ There are plenty of plugins available to take backups within WordPress. However,
 - Local and offline backups are supported.
 - Automatic deletion of local backups.
 - Support for sub-directory installation of WordPress!
+- Support for simple encryption using GnuPG
 
 ## Roadmap
 
@@ -65,7 +66,11 @@ The above is applicable to all the scripts!
 The following people have contributed to this repo in various ways...
 
 - [Nik](https://github.com/nik-lampe)
-- [Cicciodev](https://github.com/Cicciodev)
+- [Francesco](https://github.com/Cicciodev)
+
+### How to decrypt, if I used a passphrase
+
+`gpg --batch --passphrase your_passphrase encrypted_file.tar.gz.gpg`
 
 ### Can you implement it on my server?
 
