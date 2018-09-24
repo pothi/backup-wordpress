@@ -63,18 +63,15 @@ if [ ! -d "${HOME}/log" ] && [ "$(mkdir -p ${HOME}/log)" ]; then
 fi 
 
 # create the dir to keep backups, if not exists
-if [ -z "$PASSPHRASE" ] ; then
-    if [ ! -d "$BACKUP_PATH" ] && [ "$(mkdir -p $BACKUP_PATH)" ]; then
-        echo "BACKUP_PATH is not found at $BACKUP_PATH. The script can't create it, either!"
-        echo 'You may want to create it manually'
-        exit 1
-    fi
-else
-    if [ ! -d "$encrypted_backup_path" ] && [ "$(mkdir -p $encrypted_backup_path)" ]; then
-        echo "encrypted_backup_path is not found at $encrypted_backup_path. the script can't create it, either!"
-        echo 'you may want to create it manually'
-        exit 1
-    fi
+if [ ! -d "$BACKUP_PATH" ] && [ "$(mkdir -p $BACKUP_PATH)" ]; then
+    echo "BACKUP_PATH is not found at $BACKUP_PATH. The script can't create it, either!"
+    echo 'You may want to create it manually'
+    exit 1
+fi
+if [ ! -d "$encrypted_backup_path" ] && [ "$(mkdir -p $encrypted_backup_path)" ]; then
+    echo "encrypted_backup_path is not found at $encrypted_backup_path. the script can't create it, either!"
+    echo 'you may want to create it manually'
+    exit 1
 fi
 
 # get environment variables
