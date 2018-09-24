@@ -12,7 +12,7 @@
 
 # where to store the database backups?
 BACKUP_PATH=${HOME}/backups/databases
-ENCRYPTED_BACKUP_PATH=${HOME}/backups/encrypted-db-backups
+encrypted_backup_path=${HOME}/backups/encrypted-db-backups
 
 # the script assumes your sites are stored like ~/sites/example.com, ~/sites/example.net, ~/sites/example.org and so on.
 # if you have a different pattern, such as ~/app/example.com, please change the following to fit the server environment!
@@ -121,7 +121,7 @@ fi
 DOMAIN_FULL_PATH=$(echo $DOMAIN | awk '{gsub(/\//,"_")}; 1')
 
 DB_OUTPUT_FILE_NAME=${BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-${timestamp}.sql.gz
-ENCRYPTED_DB_OUTPUT_FILE_NAME=${ENCRYPTED_BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-${timestamp}.sql.gz
+ENCRYPTED_DB_OUTPUT_FILE_NAME=${encrypted_backup_path}/db-${DOMAIN_FULL_PATH}-${timestamp}.sql.gz
 
 # take actual DB backup
 if [ -f "$wp_cli" ]; then
@@ -145,9 +145,9 @@ if [ "$AWS_BUCKET" != "" ]; then
     fi
 
     if [ -z "$PASSPHRASE" ] ; then
-        $aws_cli s3 cp ${BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-${timestamp}.sql.gz s3://$AWS_BUCKET/${DOMAIN_FULL_PATH}/databases/
+        $aws_cli s3 cp $DB_OUTPUT_FILE_NAME s3://$AWS_BUCKET/${DOMAIN_FULL_PATH}/databases/
     else
-        $aws_cli s3 cp ${ENCRYPTED_BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-${timestamp}.sql.gz s3://$AWS_BUCKET/${DOMAIN_FULL_PATH}/databases/
+        $aws_cli s3 cp $ENCRYPTED_DB_OUTPUT_FILE_NAME s3://$AWS_BUCKET/${DOMAIN_FULL_PATH}/databases/
     fi
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking offsite backup';
@@ -159,6 +159,7 @@ fi
 
 # Auto delete backups 
 find $BACKUP_PATH -type f -mtime +$AUTODELETEAFTER -exec rm {} \;
+find $encrypted_backup_path -type f -mtime +$AUTODELETEAFTER -exec rm {} \;
 
 if [ -z "$PASSPHRASE" ] ; then
     echo; echo 'DB backup is done; please check the latest backup at '${BACKUP_PATH}'.'; echo

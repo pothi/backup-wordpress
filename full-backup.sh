@@ -84,6 +84,7 @@ if [ ! -d "$WP_PATH" ]; then
     exit 1
 fi
 
+ENCRYPTED_BACKUP_PATH=${HOME}/backups/encrypted-full-backups
 # where to store the backup file/s
 if [ -z "$PASSPHRASE" ] ; then
     BACKUP_PATH=${HOME}/backups/full-backups
@@ -93,7 +94,7 @@ if [ -z "$PASSPHRASE" ] ; then
         exit 1
     fi
 else
-    ENCRYPTED_BACKUP_PATH=${HOME}/backups/encrypted-backups
+    ENCRYPTED_BACKUP_PATH=${HOME}/backups/encrypted-full-backups
     if [ ! -d "$ENCRYPTED_BACKUP_PATH" ] && [ "$(mkdir -p $ENCRYPTED_BACKUP_PATH)" ]; then
         echo "ENCRYPTED_BACKUP_PATH is not found at $ENCRYPTED_BACKUP_PATH. The script can't create it, either!"
         echo 'You may want to create it manually'
