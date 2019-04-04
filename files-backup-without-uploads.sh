@@ -50,6 +50,8 @@ LOG_FILE=${HOME}/log/backups.log
 exec > >(tee -a ${LOG_FILE} )
 exec 2> >(tee -a ${LOG_FILE} >&2)
 
+echo "Date / Time: $(date +%c)"
+
 export PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/local/sbin
 
 declare -r wp_cli=`which wp`
