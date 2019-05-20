@@ -53,7 +53,7 @@ LOG_FILE=${HOME}/log/backups.log
 exec > >(tee -a ${LOG_FILE} )
 exec 2> >(tee -a ${LOG_FILE} >&2)
 
-echo "Date / Time: $(date +%c)"
+echo "Script started on... $(date +%c)"
 
 export PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/local/sbin
 
@@ -162,6 +162,8 @@ fi
 
 # Auto delete backups 
 find $BACKUP_PATH -type f -mtime +$AUTODELETEAFTER -exec rm {} \;
+
+echo "Script ended on... $(date +%c)"
 
 echo; echo 'Files backup (without uploads) is done; please check the latest backup in '${BACKUP_PATH}'.';
 echo "Full path to the latest backup is ${BACKUP_FILE_NAME}"

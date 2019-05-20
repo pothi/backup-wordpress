@@ -50,7 +50,7 @@ LOG_FILE=${HOME}/log/backups.log
 exec > >(tee -a ${LOG_FILE} )
 exec 2> >(tee -a ${LOG_FILE} >&2)
 
-echo "Date / Time: $(date +%c)"
+echo "Script started on... $(date +%c)"
 
 export PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/local/sbin
 
@@ -162,6 +162,8 @@ fi
 # Auto delete backups 
 find $BACKUP_PATH -type f -mtime +$AUTODELETEAFTER -exec rm {} \;
 find $encrypted_backup_path -type f -mtime +$AUTODELETEAFTER -exec rm {} \;
+
+echo "Script ended on... $(date +%c)"
 
 if [ -z "$PASSPHRASE" ] ; then
     echo; echo 'DB backup is done; please check the latest backup at '${BACKUP_PATH}'.'; echo
