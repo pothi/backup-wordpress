@@ -43,6 +43,9 @@ AWS_PROFILE=
 
 script_name=$(basename "$0")
 
+# create log directory if it doesn't exist
+[ ! -d ${HOME}/log ] && mkdir ${HOME}/log
+
 LOG_FILE=${HOME}/log/backups.log
 exec > >(tee -a ${LOG_FILE} )
 exec 2> >(tee -a ${LOG_FILE} >&2)
@@ -52,7 +55,7 @@ echo "Date / Time: $(date +%c)"
 export PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/local/sbin
 
 declare -r wp_cli=`which wp`
-declare -r aws_cli=`which aws`
+declare -r aws_cli=`which aws` &> /dev/null
 declare -r timestamp=$(date +%F_%H-%M-%S)
 
 let AUTODELETEAFTER--
