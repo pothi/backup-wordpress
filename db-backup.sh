@@ -55,7 +55,7 @@ echo "Script started on... $(date +%c)"
 export PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/local/sbin
 
 declare -r wp_cli=`which wp`
-declare -r aws_cli=`which aws` &> /dev/null
+which aws &> /dev/null && declare -r aws_cli=`which aws`
 declare -r timestamp=$(date +%F_%H-%M-%S)
 
 let AUTODELETEAFTER--
