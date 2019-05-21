@@ -73,7 +73,7 @@ if [ ! -d "$BACKUP_PATH" ] && [ "$(mkdir -p $BACKUP_PATH)" ]; then
     echo 'You may want to create it manually'
     exit 1
 fi
-if [ ! -d "$encrypted_backup_path" ] && [ "$(mkdir -p $encrypted_backup_path)" ]; then
+if [ -n "$PASSPHRASE" ] && [ ! -d "$encrypted_backup_path" ] && [ "$(mkdir -p $encrypted_backup_path)" ]; then
     echo "encrypted_backup_path is not found at $encrypted_backup_path. the script can't create it, either!"
     echo 'you may want to create it manually'
     exit 1
