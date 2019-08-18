@@ -1,6 +1,10 @@
 #!/bin/bash
 
-# version: 3
+# version: 3.1.0
+
+# changelog
+# version: 3.1.0
+#   - delete old backups in $ENCRYPTED_BACKUP_PATH only if this directory / path exists
 
 # this script is basically
 #   files-backup-without-uploads.sh script + part of db-backup.sh script
@@ -191,7 +195,7 @@ fi
 
 # Auto delete backups 
 find $BACKUP_PATH -type f -mtime +$AUTODELETEAFTER -exec rm {} \;
-find $ENCRYPTED_BACKUP_PATH -type f -mtime +$AUTODELETEAFTER -exec rm {} \;
+[ -d $ENCRYPTED_BACKUP_PATH ] && find $ENCRYPTED_BACKUP_PATH -type f -mtime +$AUTODELETEAFTER -exec rm {} \;
 
 echo "Script ended on... $(date +%c)"
 
