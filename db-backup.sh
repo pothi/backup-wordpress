@@ -160,8 +160,8 @@ if [ "$AWS_BUCKET" != "" ]; then
 fi
 
 # Auto delete backups 
-find $BACKUP_PATH -type f -mtime +$AUTODELETEAFTER -exec rm {} \;
-find $encrypted_backup_path -type f -mtime +$AUTODELETEAFTER -exec rm {} \;
+[ -d "$BACKUP_PATH" ] && find $BACKUP_PATH -type f -mtime +$AUTODELETEAFTER -exec rm {} \;
+[ -d $encrypted_backup_path ] && find $encrypted_backup_path -type f -mtime +$AUTODELETEAFTER -exec rm {} \;
 
 echo "Script ended on... $(date +%c)"
 
