@@ -31,7 +31,7 @@ AUTODELETEAFTER=60
 DOMAIN=
 
 # AWS Variable can be hard-coded here
-AWS_BUCKET=
+AWS_S3_BUCKET_NAME=
 
 # ref: http://docs.aws.amazon.com/cli/latest/userguide/cli-environment.html
 AWS_ACCESS_KEY_ID=
