@@ -82,6 +82,6 @@ Possibly, yes. My hourly rate is USD 50 per hour, though.
 
 ### Have questions or just wanted to say hi?
 
-Please ping me on [Twitter](https://twitter.com/pothi]) or [send me a message](https://www.tinywp.in/contact/).
+Please ping me on [Twitter](https://twitter.com/pothi) or [send me a message](https://www.tinywp.in/contact/).
 
 Suggestions, bug reports, issues, forks are always welcome!
