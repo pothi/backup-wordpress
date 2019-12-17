@@ -128,11 +128,11 @@ for i in "${!EXC_PATH[@]}" ; do
 done
 
 #------------- from db-script.sh --------------#
-DB_OUTPUT_FILE_NAME=${SITES_PATH}/${DOMAIN}/db-$timestamp.sql.gz
+DB_OUTPUT_FILE_NAME=${SITES_PATH}/${DOMAIN}/db-$timestamp.sql
 
 # take actual DB backup
 if [ -f "$wp_cli" ]; then
-    $wp_cli --path=${WP_PATH} db export --add-drop-table - | gzip > $DB_OUTPUT_FILE_NAME
+    $wp_cli --path=${WP_PATH} db export --add-drop-table $DB_OUTPUT_FILE_NAME
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking local backup!'
         echo "Check $LOG_FILE for any further log info. Exiting now!"; echo; exit 2
