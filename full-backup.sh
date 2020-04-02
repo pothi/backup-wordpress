@@ -147,6 +147,7 @@ FULL_BACKUP_FILE_NAME=${BACKUP_PATH}/full-backup-${DOMAIN}-$timestamp.tar.gz
 # let's encrypt everything with a passphrase before sending to AWS 
 # this is a simple encryption using gpg
 ENCRYPTED_FULL_BACKUP_FILE_NAME=${ENCRYPTED_BACKUP_PATH}/full-backup-${DOMAIN}-$timestamp.tar.gz.gpg
+LATEST_FULL_BACKUP_FILE_NAME=${BACKUP_PATH}/full-backup-${DOMAIN}-latest.tar.gz
 
 if [ ! -z "$PASSPHRASE" ]; then
     # using symmetric encryption
@@ -159,15 +160,26 @@ if [ ! -z "$PASSPHRASE" ]; then
     else
         echo; echo 'Backup successfully encrypted'; echo
     fi
+    rm $LATEST_FULL_BACKUP_FILE_NAME
+    ln -s ${ENCRYPTED_FULL_BACKUP_FILE_NAME} $LATEST_FULL_BACKUP_FILE_NAME
 else
     # let's do it using tar
     # Create a fresh backup
     tar hczf ${FULL_BACKUP_FILE_NAME} -C ${SITES_PATH} ${EXCLUDES} ${DOMAIN} &> /dev/null
+    if [ "$?" != "0" ]; then
+        echo; echo 'Something went wrong while encrypting full backup'; echo
+        echo "Check $LOG_FILE for any log info"; echo
+    else
+        echo; echo 'Backup successfully encrypted'; echo
+    fi
 
     echo "No PASSPHRASE provided!"
     echo "You may want to encrypt your backup before storing them offsite."
     echo "[WARNING]"
     echo "If your data came from Europe, please check GDPR compliance."
+
+    rm $LATEST_FULL_BACKUP_FILE_NAME
+    ln -s ${FULL_BACKUP_FILE_NAME} $LATEST_FULL_BACKUP_FILE_NAME
 fi
 
 # remove the reduntant DB backup

@@ -124,10 +124,13 @@ DOMAIN_FULL_PATH=$(echo $DOMAIN | awk '{gsub(/\//,"_")}; 1')
 
 DB_OUTPUT_FILE_NAME=${BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-${timestamp}.sql.gz
 ENCRYPTED_DB_OUTPUT_FILE_NAME=${encrypted_backup_path}/db-${DOMAIN_FULL_PATH}-${timestamp}.sql.gz
+DB_LATEST_FILE_NAME=${BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-latest.sql.gz
 
 # take actual DB backup
 if [ -f "$wp_cli" ]; then
     $wp_cli --path=${WP_PATH} db export --add-drop-table - | gzip > $DB_OUTPUT_FILE_NAME
+    rm $DB_LATEST_FILE_NAME
+    ln -s $DB_OUTPUT_FILE_NAME $DB_LATEST_FILE_NAME
     if [ ! -z "$PASSPHRASE" ] ; then
         gpg --symmetric --passphrase $PASSPHRASE --batch -o ${ENCRYPTED_DB_OUTPUT_FILE_NAME} $DB_OUTPUT_FILE_NAME
         rm $DB_OUTPUT_FILE_NAME
