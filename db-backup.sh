@@ -128,6 +128,7 @@ DB_LATEST_FILE_NAME=${BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-latest.sql.gz
 
 # take actual DB backup
 if [ -f "$wp_cli" ]; then
+    $wp_cli --path=${WP_PATH} transient delete --all
     $wp_cli --path=${WP_PATH} db export --add-drop-table - | gzip > $DB_OUTPUT_FILE_NAME
     rm $DB_LATEST_FILE_NAME
     ln -s $DB_OUTPUT_FILE_NAME $DB_LATEST_FILE_NAME
