@@ -130,7 +130,7 @@ DB_LATEST_FILE_NAME=${BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-latest.sql.gz
 if [ -f "$wp_cli" ]; then
     $wp_cli --path=${WP_PATH} transient delete --all
     $wp_cli --path=${WP_PATH} db export --add-drop-table - | gzip > $DB_OUTPUT_FILE_NAME
-    rm $DB_LATEST_FILE_NAME
+    [ -f $DB_LATEST_FILE_NAME ] && rm $DB_LATEST_FILE_NAME
     ln -s $DB_OUTPUT_FILE_NAME $DB_LATEST_FILE_NAME
     if [ ! -z "$PASSPHRASE" ] ; then
         gpg --symmetric --passphrase $PASSPHRASE --batch -o ${ENCRYPTED_DB_OUTPUT_FILE_NAME} $DB_OUTPUT_FILE_NAME
