@@ -136,7 +136,8 @@ if [ -f "$wp_cli" ]; then
     $wp_cli --path=${WP_PATH} db export --add-drop-table $DB_OUTPUT_FILE_NAME
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking local backup!'
-        echo "Check $LOG_FILE for any further log info. Exiting now!"; echo; exit 2
+        # remove the empty backup file
+        rm -f $DB_OUTPUT_FILE_NAME &> /dev/null
     fi
 else
     echo 'Please install wp-cli and re-run this script'; exit 1;
