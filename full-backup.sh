@@ -1,8 +1,11 @@
 #!/bin/bash
 
-# version: 3.1.0
+# version: 3.1.1
 
 # changelog
+# version: 3.1.1
+#   - date: 2020-11-24
+#   - improve documentation
 # version: 3.1.0
 #   - delete old backups in $ENCRYPTED_BACKUP_PATH only if this directory / path exists
 
@@ -157,10 +160,10 @@ if [ ! -z "$PASSPHRASE" ]; then
     # encrypting database dump
     tar hcz -C ${SITES_PATH} ${EXCLUDES} ${DOMAIN} | gpg --symmetric --passphrase $PASSPHRASE --batch -o ${ENCRYPTED_FULL_BACKUP_FILE_NAME}
     if [ "$?" != "0" ]; then
-        echo; echo 'Something went wrong while encrypting full backup'; echo
+        echo; echo 'Something went wrong while taking *encrypted* full backup'; echo
         echo "Check $LOG_FILE for any log info"; echo
     else
-        echo; echo 'Backup successfully encrypted'; echo
+        echo; echo '(Encrypted) Backup is successfully taken locally.'; echo
     fi
     [ -f $LATEST_FULL_BACKUP_FILE_NAME ] && rm $LATEST_FULL_BACKUP_FILE_NAME
     ln -s ${ENCRYPTED_FULL_BACKUP_FILE_NAME} $LATEST_FULL_BACKUP_FILE_NAME
@@ -169,10 +172,10 @@ else
     # Create a fresh backup
     tar hczf ${FULL_BACKUP_FILE_NAME} -C ${SITES_PATH} ${EXCLUDES} ${DOMAIN} &> /dev/null
     if [ "$?" != "0" ]; then
-        echo; echo 'Something went wrong while encrypting full backup'; echo
+        echo; echo 'Something went wrong while takin full backup'; echo
         echo "Check $LOG_FILE for any log info"; echo
     else
-        echo; echo 'Backup successfully encrypted'; echo
+        echo; echo 'Backup is successfully taken locally.'; echo
     fi
 
     echo "No PASSPHRASE provided!"
@@ -200,18 +203,16 @@ if [ "$BUCKET_NAME" != "" ]; then
     fi
 
     if [ "$?" != "0" ]; then
-        echo; echo 'Something went wrong while taking offsite backup'; echo
+        echo; echo 'Something went wrong while taking offsite backup.'; echo
         echo "Check $LOG_FILE for any log info"; echo
     else
-        echo; echo 'Offsite backup successful'; echo
+        echo; echo 'Offsite backup successful.'; echo
     fi
 fi
 
 # Auto delete backups 
 find $BACKUP_PATH -type f -mtime +$AUTODELETEAFTER -exec rm {} \;
 [ -d $ENCRYPTED_BACKUP_PATH ] && find $ENCRYPTED_BACKUP_PATH -type f -mtime +$AUTODELETEAFTER -exec rm {} \;
-
-echo "Script ended on... $(date +%c)"
 
 if [ -z "$PASSPHRASE" ]; then
     echo 'Full backup is done; please check the latest backup in '${BACKUP_PATH}'.';
@@ -220,4 +221,6 @@ else
     echo 'Full backup is done; please check the latest backup in '${ENCRYPTED_BACKUP_PATH}'.';
     echo "Latest backup is at ${ENCRYPTED_FULL_BACKUP_FILE_NAME}"
 fi
+
+echo "Script ended on... $(date +%c)"
 echo

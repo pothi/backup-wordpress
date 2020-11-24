@@ -1,6 +1,11 @@
 #!/bin/bash
 
-# version - 3
+# version - 3.1.1
+
+# changelog
+# version: 3.1.1
+#   - date: 2020-11-24
+#   - improve documentation
 
 ### Variables - Please do not add trailing slash in the PATHs
 
@@ -167,10 +172,11 @@ fi
 [ -d "$BACKUP_PATH" ] && find $BACKUP_PATH -type f -mtime +$AUTODELETEAFTER -exec rm {} \;
 [ -d $encrypted_backup_path ] && find $encrypted_backup_path -type f -mtime +$AUTODELETEAFTER -exec rm {} \;
 
-echo "Script ended on... $(date +%c)"
-
 if [ -z "$PASSPHRASE" ] ; then
     echo; echo 'DB backup is done; please check the latest backup at '${BACKUP_PATH}'.'; echo
 else
     echo; echo 'DB backup is done; please check the latest backup at '${ENCRYPTED_BACKUP_PATH}'.'; echo
 fi
+
+echo "Script ended on... $(date +%c)"
+

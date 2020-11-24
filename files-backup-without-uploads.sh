@@ -1,8 +1,11 @@
 #!/bin/bash
 
-# version: 2
+# version: 3.1.1
 
 # Changelog
+# v3.1.1
+#   - date: 2020-11-24
+#   - improve documentation
 # v2
 #   - date 2017-09-13
 #   - change of script name
@@ -163,8 +166,8 @@ fi
 # Auto delete backups 
 find $BACKUP_PATH -type f -mtime +$AUTODELETEAFTER -exec rm {} \;
 
-echo "Script ended on... $(date +%c)"
-
 echo; echo 'Files backup (without uploads) is done; please check the latest backup in '${BACKUP_PATH}'.';
 echo "Full path to the latest backup is ${BACKUP_FILE_NAME}"
+
+echo "Script ended on... $(date +%c)"
 echo
