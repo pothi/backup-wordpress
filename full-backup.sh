@@ -1,7 +1,11 @@
 #!/bin/bash
 
-# version: 3.1.1
+# version: 3.2.0
 
+# changelog
+# version: 3.2.0
+#   - date: 2021-03-27
+#   - improve naming scheme.
 # changelog
 # version: 3.1.1
 #   - date: 2020-11-24
@@ -199,7 +203,7 @@ if [ "$BUCKET_NAME" != "" ]; then
     if [ -z "$PASSPHRASE" ]; then
         $aws_cli s3 cp ${FULL_BACKUP_FILE_NAME} s3://$BUCKET_NAME/${DOMAIN}/full-backups/
     else
-        $aws_cli s3 cp ${ENCRYPTED_FULL_BACKUP_FILE_NAME} s3://$BUCKET_NAME/${DOMAIN}/full-backups/
+        $aws_cli s3 cp ${ENCRYPTED_FULL_BACKUP_FILE_NAME} s3://$BUCKET_NAME/${DOMAIN}/encrypted-full-backups/
     fi
 
     if [ "$?" != "0" ]; then

@@ -1,11 +1,14 @@
 #!/bin/bash
 
-# version - 3.1.1
+# version - 3.2.0
 
 # changelog
+# version: 3.2.0
+#   - date: 2021-03-27
+#   - improve naming scheme.
 # version: 3.1.1
 #   - date: 2020-11-24
-#   - improve documentation
+#   - improve documentation.
 
 ### Variables - Please do not add trailing slash in the PATHs
 
@@ -16,7 +19,7 @@
 # aws configure (as normal user)
 
 # where to store the database backups?
-BACKUP_PATH=${HOME}/backups/databases
+BACKUP_PATH=${HOME}/backups/db-backups
 encrypted_backup_path=${HOME}/backups/encrypted-db-backups
 
 # the script assumes your sites are stored like ~/sites/example.com, ~/sites/example.net, ~/sites/example.org and so on.
@@ -156,9 +159,9 @@ if [ "$AWS_BUCKET" != "" ]; then
     fi
 
     if [ -z "$PASSPHRASE" ] ; then
-        $aws_cli s3 cp $DB_OUTPUT_FILE_NAME s3://$AWS_BUCKET/${DOMAIN_FULL_PATH}/databases/
+        $aws_cli s3 cp $DB_OUTPUT_FILE_NAME s3://$AWS_BUCKET/${DOMAIN_FULL_PATH}/db-backups/
     else
-        $aws_cli s3 cp $ENCRYPTED_DB_OUTPUT_FILE_NAME s3://$AWS_BUCKET/${DOMAIN_FULL_PATH}/databases/
+        $aws_cli s3 cp $ENCRYPTED_DB_OUTPUT_FILE_NAME s3://$AWS_BUCKET/${DOMAIN_FULL_PATH}/encrypted-db-backups/
     fi
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking offsite backup';
