@@ -140,7 +140,7 @@ DB_OUTPUT_FILE_NAME=${SITES_PATH}/${DOMAIN}/db-$timestamp.sql
 # take actual DB backup
 if [ -f "$wp_cli" ]; then
     $wp_cli --path=${WP_PATH} transient delete --all
-    $wp_cli --path=${WP_PATH} db export --add-drop-table $DB_OUTPUT_FILE_NAME
+    $wp_cli --path=${WP_PATH} db export --no-tablespaces=true --add-drop-table $DB_OUTPUT_FILE_NAME
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking local backup!'
         # remove the empty backup file
