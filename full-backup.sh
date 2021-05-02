@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Don't allow unset variables
+set -o nounset
+# Exit if any command gives an error
+set -o errexit
+
 # version: 3.2.0
 
 # changelog
@@ -30,6 +35,7 @@ AUTODELETEAFTER=30
 SITES_PATH=${HOME}/sites
 
 # if WP is in a sub-directory, please leave this empty!
+# for cPanel, it is likely public_html
 PUBLIC_DIR=public
 
 ### Variables
@@ -42,31 +48,56 @@ BUCKET_NAME=
 # create log directory if it doesn't exist
 [ ! -d ${HOME}/log ] && mkdir ${HOME}/log
 
-LOG_FILE=${HOME}/log/backups.log
-exec > >(tee -a ${LOG_FILE} )
-exec 2> >(tee -a ${LOG_FILE} >&2)
+echo "PATH: $PATH"
 
-echo "Script started on... $(date +%c)"
-
-export PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/local/sbin
-
-declare -r wp_cli=`which wp`
-which aws &> /dev/null && declare -r aws_cli=`which aws`
 declare -r timestamp=$(date +%F_%H-%M-%S)
 declare -r script_name=$(basename "$0")
+
+declare -r aws_cli=$(which aws)
+declare -r wp_cli=`which wp`
+
+if [ -z "$aws_cli" ]; then
+    echo "aws-cli is not found in $PATH. Exiting."
+    exit 1
+fi
+
+if [ -z "$wp_cli" ]; then
+    echo "wp-cli is not found in $PATH. Exiting."
+    exit 1
+fi
 
 let AUTODELETEAFTER--
 
 # check if log directory exists
 if [ ! -d "${HOME}/log" ] && [ "$(mkdir -p ${HOME}/log)" ]; then
     echo "Log directory not found. The script can't create it, either!"
-    echo "Please create it manually at $HOME/log and then re-run this script"
+    echo "Please create it manually at $HOME/log and then re-run this script."
+    exit 1
+fi
+
+# where to store the backup file/s
+BACKUP_PATH=${HOME}/backups/full-backups
+if [ ! -d "$BACKUP_PATH" ] && [ "$(mkdir -p $BACKUP_PATH)" ]; then
+    echo "BACKUP_PATH is not found at $BACKUP_PATH. The script can't create it, either!"
+    echo 'You may want to create it manually'
+    exit 1
+fi
+ENCRYPTED_BACKUP_PATH=${HOME}/backups/encrypted-full-backups
+if [ -n "$PASSPHRASE" ] && [ ! -d "$ENCRYPTED_BACKUP_PATH" ] && [ "$(mkdir -p $ENCRYPTED_BACKUP_PATH)" ]; then
+    echo "ENCRYPTED_BACKUP_PATH is not found at $ENCRYPTED_BACKUP_PATH. The script can't create it, either!"
+    echo 'You may want to create it manually'
+    exit 1
+fi
+
+# path to backup
+WP_PATH=${SITES_PATH}/${DOMAIN}/${PUBLIC_DIR}
+if [ ! -d "$WP_PATH" ]; then
+    echo "$WP_PATH is not found. Please check the paths and adjust the variables in the script. Exiting now..."
     exit 1
 fi
 
 # source the envrc files if found
-[ -f "$HOME/.envrc"  ] && source ~/.envrc
-[ -f "$HOME/.env"  ] && source ~/.env
+[ -f "$HOME/.envrc"  ] && . ~/.envrc
 
 # check for the variable/s in three places
 # 1 - hard-coded value
@@ -93,26 +124,7 @@ if [ "$BUCKET_NAME" == ""  ]; then
     fi
 fi
 
-# path to backup
-WP_PATH=${SITES_PATH}/${DOMAIN}/${PUBLIC_DIR}
-if [ ! -d "$WP_PATH" ]; then
-    echo "$WP_PATH is not found. Please check the paths and adjust the variables in the script. Exiting now..."
-    exit 1
-fi
-
-# where to store the backup file/s
-BACKUP_PATH=${HOME}/backups/full-backups
-if [ ! -d "$BACKUP_PATH" ] && [ "$(mkdir -p $BACKUP_PATH)" ]; then
-    echo "BACKUP_PATH is not found at $BACKUP_PATH. The script can't create it, either!"
-    echo 'You may want to create it manually'
-    exit 1
-fi
-ENCRYPTED_BACKUP_PATH=${HOME}/backups/encrypted-full-backups
-if [ -n "$PASSPHRASE" ] && [ ! -d "$ENCRYPTED_BACKUP_PATH" ] && [ "$(mkdir -p $ENCRYPTED_BACKUP_PATH)" ]; then
-    echo "ENCRYPTED_BACKUP_PATH is not found at $ENCRYPTED_BACKUP_PATH. The script can't create it, either!"
-    echo 'You may want to create it manually'
-    exit 1
-fi
+echo "Script ended on... $(date +%c)"
 
 # path to be excluded from the backup
 # no trailing slash, please
@@ -138,16 +150,12 @@ done
 DB_OUTPUT_FILE_NAME=${SITES_PATH}/${DOMAIN}/db-$timestamp.sql
 
 # take actual DB backup
-if [ -f "$wp_cli" ]; then
-    $wp_cli --path=${WP_PATH} transient delete --all
-    $wp_cli --path=${WP_PATH} db export --no-tablespaces=true --add-drop-table $DB_OUTPUT_FILE_NAME
-    if [ "$?" != "0" ]; then
-        echo; echo 'Something went wrong while taking local backup!'
-        # remove the empty backup file
-        rm -f $DB_OUTPUT_FILE_NAME &> /dev/null
-    fi
-else
-    echo 'Please install wp-cli and re-run this script'; exit 1;
+$wp_cli --path=${WP_PATH} transient delete --all
+$wp_cli --path=${WP_PATH} db export --no-tablespaces=true --add-drop-table $DB_OUTPUT_FILE_NAME
+if [ "$?" != "0" ]; then
+    echo; echo 'Something went wrong while taking local backup!'
+    # remove the empty backup file
+    rm -f $DB_OUTPUT_FILE_NAME &> /dev/null
 fi
 #------------- end of snippet from db-script.sh --------------#
 
@@ -165,7 +173,7 @@ if [ ! -z "$PASSPHRASE" ]; then
     tar hcz -C ${SITES_PATH} ${EXCLUDES} ${DOMAIN} | gpg --symmetric --passphrase $PASSPHRASE --batch -o ${ENCRYPTED_FULL_BACKUP_FILE_NAME}
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking *encrypted* full backup'; echo
-        echo "Check $LOG_FILE for any log info"; echo
+        echo "Check $log_file for any log info"; echo
     else
         echo; echo '(Encrypted) Backup is successfully taken locally.'; echo
     fi
@@ -177,15 +185,15 @@ else
     tar hczf ${FULL_BACKUP_FILE_NAME} -C ${SITES_PATH} ${EXCLUDES} ${DOMAIN} &> /dev/null
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while takin full backup'; echo
-        echo "Check $LOG_FILE for any log info"; echo
+        echo "Check $log_file for any log info"; echo
     else
         echo; echo 'Backup is successfully taken locally.'; echo
     fi
 
+    echo "[WARNING]"
     echo "No PASSPHRASE provided!"
     echo "You may want to encrypt your backup before storing them offsite."
-    echo "[WARNING]"
-    echo "If your data came from Europe, please check GDPR compliance."
+    echo "If your data comes from Europe, please check GDPR compliance."
 
     [ -f $LATEST_FULL_BACKUP_FILE_NAME ] && rm $LATEST_FULL_BACKUP_FILE_NAME
     ln -s ${FULL_BACKUP_FILE_NAME} $LATEST_FULL_BACKUP_FILE_NAME
@@ -208,7 +216,7 @@ if [ "$BUCKET_NAME" != "" ]; then
 
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking offsite backup.'; echo
-        echo "Check $LOG_FILE for any log info"; echo
+        echo "Check $log_file for any log info"; echo
     else
         echo; echo 'Offsite backup successful.'; echo
     fi
