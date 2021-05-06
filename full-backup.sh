@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Don't allow unset variables
-set -o nounset
+# set -o nounset
 # Exit if any command gives an error
-set -o errexit
+# set -o errexit
 
 # version: 3.2.0
 
