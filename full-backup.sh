@@ -89,13 +89,6 @@ if [ -n "$PASSPHRASE" ] && [ ! -d "$ENCRYPTED_BACKUP_PATH" ] && [ "$(mkdir -p $E
     exit 1
 fi
 
-# path to backup
-WP_PATH=${SITES_PATH}/${DOMAIN}/${PUBLIC_DIR}
-if [ ! -d "$WP_PATH" ]; then
-    echo "$WP_PATH is not found. Please check the paths and adjust the variables in the script. Exiting now..."
-    exit 1
-fi
-
 # source the envrc files if found
 [ -f "$HOME/.envrc"  ] && . ~/.envrc
 
@@ -124,7 +117,14 @@ if [ "$BUCKET_NAME" == ""  ]; then
     fi
 fi
 
-echo "Script ended on... $(date +%c)"
+echo "Script started on... $(date +%c)"
+
+# path to backup
+WP_PATH=${SITES_PATH}/${DOMAIN}/${PUBLIC_DIR}
+if [ ! -d "$WP_PATH" ]; then
+    echo "$WP_PATH is not found. Please check the paths and adjust the variables in the script. Exiting now..."
+    exit 1
+fi
 
 # path to be excluded from the backup
 # no trailing slash, please
