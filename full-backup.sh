@@ -48,8 +48,6 @@ BUCKET_NAME=
 # create log directory if it doesn't exist
 [ ! -d ${HOME}/log ] && mkdir ${HOME}/log
 
-echo "PATH: $PATH"
-
 declare -r timestamp=$(date +%F_%H-%M-%S)
 declare -r script_name=$(basename "$0")
 
@@ -200,7 +198,9 @@ rm $DB_OUTPUT_FILE_NAME
 # send backup to AWS S3 bucket
 if [ "$BUCKET_NAME" != "" ]; then
     if [ ! -e "$aws_cli" ]; then
-        echo "aws-cli is not found in $PATH. Exiting."
+        echo "aws-cli is not found in \$PATH. Exiting."
+        echo "PATH: $PATH"
+        echo "AWS Bucket Name: '$BUCKET_NAME'."
         exit 1
     fi
 
