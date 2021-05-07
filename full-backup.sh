@@ -56,11 +56,6 @@ declare -r script_name=$(basename "$0")
 declare -r aws_cli=$(which aws)
 declare -r wp_cli=`which wp`
 
-if [ -z "$aws_cli" ]; then
-    echo "aws-cli is not found in $PATH. Exiting."
-    exit 1
-fi
-
 if [ -z "$wp_cli" ]; then
     echo "wp-cli is not found in $PATH. Exiting."
     exit 1
@@ -204,8 +199,9 @@ rm $DB_OUTPUT_FILE_NAME
 
 # send backup to AWS S3 bucket
 if [ "$BUCKET_NAME" != "" ]; then
-    if [ ! -e "$aws_cli" ] ; then
-        echo; echo 'Did you run "pip install aws && aws configure"'; echo;
+    if [ ! -e "$aws_cli" ]; then
+        echo "aws-cli is not found in $PATH. Exiting."
+        exit 1
     fi
 
     if [ -z "$PASSPHRASE" ]; then
