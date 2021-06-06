@@ -1,13 +1,18 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Don't allow unset variables
 # set -o nounset
 # Exit if any command gives an error
 # set -o errexit
 
-# version: 3.2.0
+# version: 4.0.0
 
 # changelog
+# version: 4.0.0
+#   - date: 2021-06-06
+#   - simplify excludes in tar command
+#   - simplify naming scheme for encrypted backups
+#   - show only errors while uploading to S3. Not even progress bar.
 # version: 3.2.0
 #   - date: 2021-03-27
 #   - improve naming scheme.
@@ -45,24 +50,18 @@ BUCKET_NAME=
 
 #-------- Do NOT Edit Below This Line --------#
 
-# create log directory if it doesn't exist
-[ ! -d ${HOME}/log ] && mkdir ${HOME}/log
-
 declare -r timestamp=$(date +%F_%H-%M-%S)
 declare -r script_name=$(basename "$0")
 
 declare -r aws_cli=$(which aws)
 declare -r wp_cli=`which wp`
 
-if [ -z "$wp_cli" ]; then
-    echo "wp-cli is not found in $PATH. Exiting."
-    exit 1
-fi
+[ -z "$wp_cli" ] && { echo "wp-cli is not found in $PATH. Exiting."; exit 1 }
 
 let AUTODELETEAFTER--
 
 # check if log directory exists
-if [ ! -d "${HOME}/log" ] && [ "$(mkdir -p ${HOME}/log)" ]; then
+if [ ! -d "${HOME}/log" ] && [ "$(mkdir ${HOME}/log)" ]; then
     echo "Log directory not found. The script can't create it, either!"
     echo "Please create it manually at $HOME/log and then re-run this script."
     exit 1
@@ -75,6 +74,7 @@ if [ ! -d "$BACKUP_PATH" ] && [ "$(mkdir -p $BACKUP_PATH)" ]; then
     echo 'You may want to create it manually'
     exit 1
 fi
+
 ENCRYPTED_BACKUP_PATH=${HOME}/backups/encrypted-full-backups
 if [ -n "$PASSPHRASE" ] && [ ! -d "$ENCRYPTED_BACKUP_PATH" ] && [ "$(mkdir -p $ENCRYPTED_BACKUP_PATH)" ]; then
     echo "ENCRYPTED_BACKUP_PATH is not found at $ENCRYPTED_BACKUP_PATH. The script can't create it, either!"
@@ -126,11 +126,11 @@ if [ "$PUBLIC_DIR" != "" ]; then
     EXCLUDE_BASE_PATH=${EXCLUDE_BASE_PATH}/${PUBLIC_DIR}
 fi
 
-declare -A EXC_PATH
+declare -a EXC_PATH
+EXC_PATH[0]=${EXCLUDE_BASE_PATH}/.git
 EXC_PATH[1]=${EXCLUDE_BASE_PATH}/wp-content/cache
-EXC_PATH[2]=${EXCLUDE_BASE_PATH}/wp-content/debug.log
-EXC_PATH[3]=${EXCLUDE_BASE_PATH}/.git
 # need more? - just use the above format
+# all log files are excluded already.
 
 EXCLUDES=''
 for i in "${!EXC_PATH[@]}" ; do
@@ -140,57 +140,42 @@ for i in "${!EXC_PATH[@]}" ; do
 done
 
 #------------- from db-script.sh --------------#
-DB_OUTPUT_FILE_NAME=${SITES_PATH}/${DOMAIN}/db-$timestamp.sql
+DB_OUTPUT_FILE_NAME=${SITES_PATH}/${DOMAIN}/db.sql
 
 # take actual DB backup
 $wp_cli --path=${WP_PATH} transient delete --all
 $wp_cli --path=${WP_PATH} db export --no-tablespaces=true --add-drop-table $DB_OUTPUT_FILE_NAME
 if [ "$?" != "0" ]; then
-    echo; echo 'Something went wrong while taking local backup!'
+    echo; echo '[Warn] Something went wrong while taking DB backup!'
     # remove the empty backup file
     rm -f $DB_OUTPUT_FILE_NAME &> /dev/null
 fi
 #------------- end of snippet from db-script.sh --------------#
 
-FULL_BACKUP_FILE_NAME=${BACKUP_PATH}/full-backup-${DOMAIN}-$timestamp.tar.gz
-
-# let's encrypt everything with a passphrase before sending to AWS 
-# this is a simple encryption using gpg
-ENCRYPTED_FULL_BACKUP_FILE_NAME=${ENCRYPTED_BACKUP_PATH}/full-backup-${DOMAIN}-$timestamp.tar.gz.gpg
-LATEST_FULL_BACKUP_FILE_NAME=${BACKUP_PATH}/full-backup-${DOMAIN}-latest.tar.gz
+FULL_BACKUP_FILE_NAME=${BACKUP_PATH}/${DOMAIN}-$timestamp.tar.gz
+LATEST_FULL_BACKUP_FILE_NAME=${BACKUP_PATH}/${DOMAIN}-latest.tar.gz
 
 if [ ! -z "$PASSPHRASE" ]; then
+    FULL_BACKUP_FILE_NAME=${FULL_BACKUP_FILE_NAME}.gpg
+    LATEST_FULL_BACKUP_FILE_NAME=${LATEST_FULL_BACKUP_FILE_NAME}.gpg
     # using symmetric encryption
     # option --batch to avoid passphrase prompt
     # encrypting database dump
-    tar hcz -C ${SITES_PATH} ${EXCLUDES} ${DOMAIN} | gpg --symmetric --passphrase $PASSPHRASE --batch -o ${ENCRYPTED_FULL_BACKUP_FILE_NAME}
-    if [ "$?" != "0" ]; then
-        echo; echo 'Something went wrong while taking *encrypted* full backup'; echo
-        echo "Check $log_file for any log info"; echo
-    else
-        echo; echo '(Encrypted) Backup is successfully taken locally.'; echo
-    fi
-    [ -f $LATEST_FULL_BACKUP_FILE_NAME ] && rm $LATEST_FULL_BACKUP_FILE_NAME
-    ln -s ${ENCRYPTED_FULL_BACKUP_FILE_NAME} $LATEST_FULL_BACKUP_FILE_NAME
+    tar hcz -C ${SITES_PATH} --exclude='*.log' ${EXCLUDES} ${DOMAIN} | gpg --symmetric --passphrase $PASSPHRASE --batch -o $FULL_BACKUP_FILE_NAME
 else
-    # let's do it using tar
-    # Create a fresh backup
+    echo "[Warn] No passphrase provided for encryption!"
+    echo "[Warn] If you are from Europe, please check GDPR compliance."
     tar hczf ${FULL_BACKUP_FILE_NAME} -C ${SITES_PATH} ${EXCLUDES} ${DOMAIN} &> /dev/null
-    if [ "$?" != "0" ]; then
-        echo; echo 'Something went wrong while takin full backup'; echo
-        echo "Check $log_file for any log info"; echo
-    else
-        echo; echo 'Backup is successfully taken locally.'; echo
-    fi
-
-    echo "[WARNING]"
-    echo "No PASSPHRASE provided!"
-    echo "You may want to encrypt your backup before storing them offsite."
-    echo "If your data comes from Europe, please check GDPR compliance."
-
-    [ -f $LATEST_FULL_BACKUP_FILE_NAME ] && rm $LATEST_FULL_BACKUP_FILE_NAME
-    ln -s ${FULL_BACKUP_FILE_NAME} $LATEST_FULL_BACKUP_FILE_NAME
 fi
+if [ "$?" != "0" ]; then
+    echo; echo 'Something went wrong while takin full backup'; echo
+    echo "Check $log_file for any log info"; echo
+else
+    echo; echo 'Backup is successfully taken locally.'; echo
+fi
+
+[ -f $LATEST_FULL_BACKUP_FILE_NAME ] && rm $LATEST_FULL_BACKUP_FILE_NAME
+ln -s ${FULL_BACKUP_FILE_NAME} $LATEST_FULL_BACKUP_FILE_NAME
 
 # remove the reduntant DB backup
 rm $DB_OUTPUT_FILE_NAME
@@ -198,20 +183,16 @@ rm $DB_OUTPUT_FILE_NAME
 # send backup to AWS S3 bucket
 if [ "$BUCKET_NAME" != "" ]; then
     if [ ! -e "$aws_cli" ]; then
-        echo "aws-cli is not found in \$PATH. Exiting."
+        echo "[Warn] aws-cli is not found in \$PATH. Exiting."
         echo "PATH: $PATH"
         echo "AWS Bucket Name: '$BUCKET_NAME'."
         exit 1
     fi
 
-    if [ -z "$PASSPHRASE" ]; then
-        $aws_cli s3 cp ${FULL_BACKUP_FILE_NAME} s3://$BUCKET_NAME/${DOMAIN}/full-backups/
-    else
-        $aws_cli s3 cp ${ENCRYPTED_FULL_BACKUP_FILE_NAME} s3://$BUCKET_NAME/${DOMAIN}/encrypted-full-backups/
-    fi
+    $aws_cli s3 cp ${FULL_BACKUP_FILE_NAME} s3://$BUCKET_NAME/${DOMAIN}/full-backups/ --only-show-errors
 
     if [ "$?" != "0" ]; then
-        echo; echo 'Something went wrong while taking offsite backup.'; echo
+        echo; echo '[Warn] Something went wrong while taking offsite backup.'; echo
         echo "Check $log_file for any log info"; echo
     else
         echo; echo 'Offsite backup successful.'; echo
@@ -220,15 +201,9 @@ fi
 
 # Auto delete backups 
 find $BACKUP_PATH -type f -mtime +$AUTODELETEAFTER -exec rm {} \;
-[ -d $ENCRYPTED_BACKUP_PATH ] && find $ENCRYPTED_BACKUP_PATH -type f -mtime +$AUTODELETEAFTER -exec rm {} \;
 
-if [ -z "$PASSPHRASE" ]; then
-    echo 'Full backup is done; please check the latest backup in '${BACKUP_PATH}'.';
-    echo "Latest backup is at ${FULL_BACKUP_FILE_NAME}"
-else
-    echo 'Full backup is done; please check the latest backup in '${ENCRYPTED_BACKUP_PATH}'.';
-    echo "Latest backup is at ${ENCRYPTED_FULL_BACKUP_FILE_NAME}"
-fi
+echo 'Full backup is done; please check the latest backup in '${BACKUP_PATH}'.';
+echo "Latest backup is at ${FULL_BACKUP_FILE_NAME}"
 
 echo "Script ended on... $(date +%c)"
 echo

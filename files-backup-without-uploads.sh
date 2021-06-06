@@ -154,7 +154,7 @@ if [ "$BUCKET_NAME" != "" ]; then
         echo; echo 'Did you run "pip install aws && aws configure"'; echo;
     fi
 
-    $aws_cli s3 cp ${BACKUP_FILE_NAME} s3://$BUCKET_NAME/${DOMAIN}/files-backup-without-uploads/
+    $aws_cli s3 cp ${BACKUP_FILE_NAME} s3://$BUCKET_NAME/${DOMAIN}/files-backup-without-uploads/ --only-show-errors
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking offsite backup'; echo
         echo "Check $LOG_FILE for any log info"; echo

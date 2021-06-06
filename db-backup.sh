@@ -159,7 +159,7 @@ if [ "$AWS_BUCKET" != "" ]; then
     fi
 
     if [ -z "$PASSPHRASE" ] ; then
-        $aws_cli s3 cp $DB_OUTPUT_FILE_NAME s3://$AWS_BUCKET/${DOMAIN_FULL_PATH}/db-backups/
+        $aws_cli s3 cp $DB_OUTPUT_FILE_NAME s3://$AWS_BUCKET/${DOMAIN_FULL_PATH}/db-backups/ --only-show-errors
     else
         $aws_cli s3 cp $ENCRYPTED_DB_OUTPUT_FILE_NAME s3://$AWS_BUCKET/${DOMAIN_FULL_PATH}/encrypted-db-backups/
     fi
