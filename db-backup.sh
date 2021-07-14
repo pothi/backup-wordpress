@@ -1,8 +1,11 @@
 #!/bin/bash
 
-# version - 3.2.0
+# version - 3.2.1
 
 # changelog
+# version: 3.2.1
+#   - date: 2021-07-14
+#   - aws cli add option "--only-show-errors"
 # version: 3.2.0
 #   - date: 2021-03-27
 #   - improve naming scheme.
@@ -161,7 +164,7 @@ if [ "$AWS_BUCKET" != "" ]; then
     if [ -z "$PASSPHRASE" ] ; then
         $aws_cli s3 cp $DB_OUTPUT_FILE_NAME s3://$AWS_BUCKET/${DOMAIN_FULL_PATH}/db-backups/ --only-show-errors
     else
-        $aws_cli s3 cp $ENCRYPTED_DB_OUTPUT_FILE_NAME s3://$AWS_BUCKET/${DOMAIN_FULL_PATH}/encrypted-db-backups/
+        $aws_cli s3 cp $ENCRYPTED_DB_OUTPUT_FILE_NAME s3://$AWS_BUCKET/${DOMAIN_FULL_PATH}/encrypted-db-backups/ --only-show-errors
     fi
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking offsite backup';
