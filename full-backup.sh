@@ -5,9 +5,12 @@
 # Exit if any command gives an error
 # set -o errexit
 
-# version: 4.0.0
+# version: 4.0.1
 
 # changelog
+# version: 4.0.1
+#   - date: 2021-08-30
+#   - fix a minor bug
 # version: 4.0.0
 #   - date: 2021-06-06
 #   - simplify excludes in tar command
@@ -56,7 +59,10 @@ declare -r script_name=$(basename "$0")
 declare -r aws_cli=$(which aws)
 declare -r wp_cli=`which wp`
 
-[ -z "$wp_cli" ] && { echo "wp-cli is not found in $PATH. Exiting."; exit 1 }
+if [ -z "$wp_cli" ]; then
+    echo "wp-cli is not found in $PATH. Exiting."
+    exit 1
+fi
 
 let AUTODELETEAFTER--
 
