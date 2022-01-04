@@ -23,7 +23,7 @@
 
 # where to store the database backups?
 BACKUP_PATH=${HOME}/backups/db-backups
-encrypted_backup_path=${HOME}/backups/encrypted-db-backups
+ENCRYPTED_BACKUP_PATH=${HOME}/backups/encrypted-db-backups
 
 # the script assumes your sites are stored like ~/sites/example.com, ~/sites/example.net, ~/sites/example.org and so on.
 # if you have a different pattern, such as ~/app/example.com, please change the following to fit the server environment!
@@ -84,8 +84,8 @@ if [ ! -d "$BACKUP_PATH" ] && [ "$(mkdir -p $BACKUP_PATH)" ]; then
     echo 'You may want to create it manually'
     exit 1
 fi
-if [ -n "$PASSPHRASE" ] && [ ! -d "$encrypted_backup_path" ] && [ "$(mkdir -p $encrypted_backup_path)" ]; then
-    echo "encrypted_backup_path is not found at $encrypted_backup_path. the script can't create it, either!"
+if [ -n "$PASSPHRASE" ] && [ ! -d "$ENCRYPTED_BACKUP_PATH" ] && [ "$(mkdir -p $ENCRYPTED_BACKUP_PATH)" ]; then
+    echo "ENCRYPTED_BACKUP_PATH Is not found at $ENCRYPTED_BACKUP_PATH. the script can't create it, either!"
     echo 'you may want to create it manually'
     exit 1
 fi
@@ -134,7 +134,7 @@ fi
 DOMAIN_FULL_PATH=$(echo $DOMAIN | awk '{gsub(/\//,"_")}; 1')
 
 DB_OUTPUT_FILE_NAME=${BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-${timestamp}.sql.gz
-ENCRYPTED_DB_OUTPUT_FILE_NAME=${encrypted_backup_path}/db-${DOMAIN_FULL_PATH}-${timestamp}.sql.gz
+ENCRYPTED_DB_OUTPUT_FILE_NAME=${ENCRYPTED_BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-${timestamp}.sql.gz
 DB_LATEST_FILE_NAME=${BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-latest.sql.gz
 
 # take actual DB backup
@@ -142,11 +142,13 @@ if [ -f "$wp_cli" ]; then
     $wp_cli --path=${WP_PATH} transient delete --all
     $wp_cli --path=${WP_PATH} db export --no-tablespaces=true --add-drop-table - | gzip > $DB_OUTPUT_FILE_NAME
     [ -f $DB_LATEST_FILE_NAME ] && rm $DB_LATEST_FILE_NAME
-    ln -s $DB_OUTPUT_FILE_NAME $DB_LATEST_FILE_NAME
-    if [ ! -z "$PASSPHRASE" ] ; then
+    if [ -n "$PASSPHRASE" ] ; then
         gpg --symmetric --passphrase $PASSPHRASE --batch -o ${ENCRYPTED_DB_OUTPUT_FILE_NAME} $DB_OUTPUT_FILE_NAME
         rm $DB_OUTPUT_FILE_NAME
-    fi
+	ln -s $ENCRYPTED_DB_OUTPUT_FILE_NAME $DB_LATEST_FILE_NAME
+    else
+      ln -s $DB_OUTPUT_FILE_NAME $DB_LATEST_FILE_NAME
+    fi	
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking local backup!'
         rm -f $DB_OUTPUT_FILE_NAME &> /dev/null
@@ -176,12 +178,12 @@ fi
 
 # Auto delete backups 
 [ -d "$BACKUP_PATH" ] && find $BACKUP_PATH -type f -mtime +$AUTODELETEAFTER -exec rm {} \;
-[ -d $encrypted_backup_path ] && find $encrypted_backup_path -type f -mtime +$AUTODELETEAFTER -exec rm {} \;
+[ -d $ENCRYPTED_BACKUP_PATH ] && find $ENCRYPTED_BACKUP_PATH -type f -mtime +$AUTODELETEAFTER -exec rm {} \;
 
 if [ -z "$PASSPHRASE" ] ; then
-    echo; echo 'DB backup is done; please check the latest backup at '${BACKUP_PATH}'.'; echo
+    echo; echo 'DB backup is done without encryption:  '${DB_LATEST_FILE_NAME}' -> '${DB_OUTPUT_FILE_NAME}; echo
 else
-    echo; echo 'DB backup is done; please check the latest backup at '${ENCRYPTED_BACKUP_PATH}'.'; echo
+    echo; echo 'DB backup is done encrypted:  '${DB_LATEST_FILE_NAME}' -> '${ENCRYPTED_DB_OUTPUT_FILE_NAME}; echo
 fi
 
 echo "Script ended on... $(date +%c)"
