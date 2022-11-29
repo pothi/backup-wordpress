@@ -1,13 +1,20 @@
 #!/usr/bin/env bash
 
+# requirements
+# ~/log, ~/backups, ~/path/to/example.com/public
+
 # Don't allow unset variables
 # set -o nounset
 # Exit if any command gives an error
 # set -o errexit
 
-# version: 4.0.1
+# version: 4.0.2
 
 # changelog
+# version: 4.0.2
+#   - date: 2022-11-29
+#   - rewrite logic while attempting to create required directories
+#   - add requirements section
 # version: 4.0.1
 #   - date: 2021-08-30
 #   - fix a minor bug
@@ -53,9 +60,36 @@ BUCKET_NAME=
 
 #-------- Do NOT Edit Below This Line --------#
 
+# attempt to create log directory if it doesn't exist
+[ -d "${HOME}/log" ] || mkdir -p ${HOME}/log
+if [ "$?" -ne 0 ]; then
+    echo 'Log directory not found at ~/log'
+    echo 'You may create it manually and re-run this script.'
+    exit 1
+fi
+# attempt to create the backups directory, if it doesn't exist
+[ -d "$BACKUP_PATH" ] || mkdir -p $BACKUP_PATH
+if [ "$?" -ne 0 ]; then
+    echo "BACKUP_PATH is not found at $BACKUP_PATH. The script can't create it, either!"
+    echo 'You may create it manually and re-run this script.'
+    exit 1
+fi
+# if passphrase is supplied, attempt to create backups directory for encrypt backups, if it doesn't exist
+if [ -n "$PASSPHRASE" ]; then
+    [ -d "$ENCRYPTED_BACKUP_PATH" ] || mkdir -p $ENCRYPTED_BACKUP_PATH
+    if [ "$?" -ne 0 ]; then
+        echo "ENCRYPTED_BACKUP_PATH Is not found at $ENCRYPTED_BACKUP_PATH. the script can't create it, either!"
+        echo 'You may create it manually and re-run this script.'
+        exit 1
+    fi
+fi
+
+log_file=${HOME}/log/backups.log
+exec > >(tee -a ${log_file} )
+exec 2> >(tee -a ${log_file} >&2)
+
 declare -r timestamp=$(date +%F_%H-%M-%S)
 declare -r script_name=$(basename "$0")
-
 declare -r aws_cli=$(which aws)
 declare -r wp_cli=`which wp`
 
@@ -64,32 +98,16 @@ if [ -z "$wp_cli" ]; then
     exit 1
 fi
 
+if [ -z "$aws_cli" ]; then
+    echo "aws-cli is not found in $PATH. Exiting."
+    exit 1
+fi
+
 let AUTODELETEAFTER--
 
-# check if log directory exists
-if [ ! -d "${HOME}/log" ] && [ "$(mkdir ${HOME}/log)" ]; then
-    echo "Log directory not found. The script can't create it, either!"
-    echo "Please create it manually at $HOME/log and then re-run this script."
-    exit 1
-fi
-
-# where to store the backup file/s
-BACKUP_PATH=${HOME}/backups/full-backups
-if [ ! -d "$BACKUP_PATH" ] && [ "$(mkdir -p $BACKUP_PATH)" ]; then
-    echo "BACKUP_PATH is not found at $BACKUP_PATH. The script can't create it, either!"
-    echo 'You may want to create it manually'
-    exit 1
-fi
-
-ENCRYPTED_BACKUP_PATH=${HOME}/backups/encrypted-full-backups
-if [ -n "$PASSPHRASE" ] && [ ! -d "$ENCRYPTED_BACKUP_PATH" ] && [ "$(mkdir -p $ENCRYPTED_BACKUP_PATH)" ]; then
-    echo "ENCRYPTED_BACKUP_PATH is not found at $ENCRYPTED_BACKUP_PATH. The script can't create it, either!"
-    echo 'You may want to create it manually'
-    exit 1
-fi
-
-# source the envrc files if found
-[ -f "$HOME/.envrc"  ] && . ~/.envrc
+# get environment variables, if exists
+[ -f "$HOME/.envrc" ] && source ~/.envrc
+[ -f "$HOME/.env" ] && source ~/.env
 
 # check for the variable/s in three places
 # 1 - hard-coded value
@@ -148,6 +166,9 @@ done
 #------------- from db-script.sh --------------#
 DB_OUTPUT_FILE_NAME=${SITES_PATH}/${DOMAIN}/db.sql
 
+# to capture non-zero exit code in the pipeline
+set -o pipefail
+
 # take actual DB backup
 $wp_cli --path=${WP_PATH} transient delete --all
 $wp_cli --path=${WP_PATH} db export --no-tablespaces=true --add-drop-table $DB_OUTPUT_FILE_NAME
@@ -174,7 +195,7 @@ else
     tar hczf ${FULL_BACKUP_FILE_NAME} -C ${SITES_PATH} ${EXCLUDES} ${DOMAIN} &> /dev/null
 fi
 if [ "$?" != "0" ]; then
-    echo; echo 'Something went wrong while takin full backup'; echo
+    echo; echo 'Something went wrong while taking full backup'; echo
     echo "Check $log_file for any log info"; echo
 else
     echo; echo 'Backup is successfully taken locally.'; echo

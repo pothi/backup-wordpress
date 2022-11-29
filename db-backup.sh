@@ -1,8 +1,15 @@
 #!/bin/bash
 
-# version - 3.2.1
+# requirements
+# ~/log, ~/backups, ~/path/to/example.com/public
+
+# version - 3.2.2
 
 # changelog
+# version: 3.2.2
+#   - date: 2022-11-29
+#   - rewrite logic while attempting to create required directories
+#   - add requirements section
 # version: 3.2.1
 #   - date: 2021-07-14
 #   - aws cli add option "--only-show-errors"
@@ -25,11 +32,13 @@
 BACKUP_PATH=${HOME}/backups/db-backups
 ENCRYPTED_BACKUP_PATH=${HOME}/backups/encrypted-db-backups
 
-# the script assumes your sites are stored like ~/sites/example.com, ~/sites/example.net, ~/sites/example.org and so on.
-# if you have a different pattern, such as ~/app/example.com, please change the following to fit the server environment!
+# the script assumes your sites are stored like ~/sites/example.com/public, ~/sites/example.net/public, ~/sites/example.org/public and so on.
+# if you have a different pattern, such as ~/app/example.com/public, please change the following to fit the server environment!
+# cPanel - SITES_PATH=$HOME
 SITES_PATH=${HOME}/sites
 
 # if WP is in a sub-directory, please leave this empty!
+# cPanel - PUBLIC_DIR=public_html
 PUBLIC_DIR=public
 
 # a passphrase for encryption, in order to being able to use almost any special characters use ""
@@ -52,51 +61,58 @@ AWS_PROFILE=
 
 #-------- Do NOT Edit Below This Line --------#
 
-script_name=$(basename "$0")
+# attempt to create log directory if it doesn't exist
+[ -d "${HOME}/log" ] || mkdir -p ${HOME}/log
+if [ "$?" -ne "0" ]; then
+    echo 'Log directory not found at ~/log'
+    echo 'You may create it manually and re-run this script.'
+    exit 1
+fi
+# attempt to create the backups directory, if it doesn't exist
+[ -d "$BACKUP_PATH" ] || mkdir -p $BACKUP_PATH
+if [ "$?" -ne "0" ]; then
+    echo "BACKUP_PATH is not found at $BACKUP_PATH. The script can't create it, either!"
+    echo 'You may create it manually and re-run this script.'
+    exit 1
+fi
+# if passphrase is supplied, attempt to create backups directory for encrypt backups, if it doesn't exist
+if [ -n "$PASSPHRASE" ]; then
+    [ -d "$ENCRYPTED_BACKUP_PATH" ] || mkdir -p $ENCRYPTED_BACKUP_PATH
+    if [ "$?" -ne "0" ]; then
+        echo "ENCRYPTED_BACKUP_PATH Is not found at $ENCRYPTED_BACKUP_PATH. the script can't create it, either!"
+        echo 'You may create it manually and re-run this script.'
+        exit 1
+    fi
+fi
 
-# create log directory if it doesn't exist
-[ ! -d ${HOME}/log ] && mkdir ${HOME}/log
-
-LOG_FILE=${HOME}/log/backups.log
-exec > >(tee -a ${LOG_FILE} )
-exec 2> >(tee -a ${LOG_FILE} >&2)
+log_file=${HOME}/log/backups.log
+exec > >(tee -a ${log_file} )
+exec 2> >(tee -a ${log_file} >&2)
 
 echo "Script started on... $(date +%c)"
 
 export PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/local/sbin
 
-declare -r wp_cli=`which wp`
-which aws &> /dev/null && declare -r aws_cli=`which aws`
+declare -r script_name=$(basename "$0")
 declare -r timestamp=$(date +%F_%H-%M-%S)
+declare -r wp_cli=`which wp`
+declare -r aws_cli=`which aws`
+
+if [ -z "$wp_cli" ]; then
+    echo "wp-cli is not found in $PATH. Exiting."
+    exit 1
+fi
+
+if [ -z "$aws_cli" ]; then
+    echo "aws-cli is not found in $PATH. Exiting."
+    exit 1
+fi
 
 let AUTODELETEAFTER--
 
-# check if log directory exists
-if [ ! -d "${HOME}/log" ] && [ "$(mkdir -p ${HOME}/log)" ]; then
-    echo 'Log directory not found'
-    echo "Please create it manually at $HOME/log and then re-run this script"
-    exit 1
-fi 
-
-# create the dir to keep backups, if not exists
-if [ ! -d "$BACKUP_PATH" ] && [ "$(mkdir -p $BACKUP_PATH)" ]; then
-    echo "BACKUP_PATH is not found at $BACKUP_PATH. The script can't create it, either!"
-    echo 'You may want to create it manually'
-    exit 1
-fi
-if [ -n "$PASSPHRASE" ] && [ ! -d "$ENCRYPTED_BACKUP_PATH" ] && [ "$(mkdir -p $ENCRYPTED_BACKUP_PATH)" ]; then
-    echo "ENCRYPTED_BACKUP_PATH Is not found at $ENCRYPTED_BACKUP_PATH. the script can't create it, either!"
-    echo 'you may want to create it manually'
-    exit 1
-fi
-
-# get environment variables
-if [ -f "$HOME/.envrc"  ]; then
-    source ~/.envrc
-fi
-if [ -f "$HOME/.env"  ]; then
-    source ~/.env
-fi
+# get environment variables, if exists
+[ -f "$HOME/.envrc" ] && source ~/.envrc
+[ -f "$HOME/.env" ] && source ~/.env
 
 # check for the variable/s in three places
 # 1 - hard-coded value
@@ -137,21 +153,25 @@ DB_OUTPUT_FILE_NAME=${BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-${timestamp}.sql.gz
 ENCRYPTED_DB_OUTPUT_FILE_NAME=${ENCRYPTED_BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-${timestamp}.sql.gz
 DB_LATEST_FILE_NAME=${BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-latest.sql.gz
 
+# to capture non-zero exit code in the pipeline
+set -o pipefail
+
 # take actual DB backup
 if [ -f "$wp_cli" ]; then
     $wp_cli --path=${WP_PATH} transient delete --all
     $wp_cli --path=${WP_PATH} db export --no-tablespaces=true --add-drop-table - | gzip > $DB_OUTPUT_FILE_NAME
+    if [ "$?" != "0" ]; then
+        echo; echo 'Something went wrong while taking local backup!'
+        rm -f $DB_OUTPUT_FILE_NAME &> /dev/null
+    fi
+
     [ -f $DB_LATEST_FILE_NAME ] && rm $DB_LATEST_FILE_NAME
     if [ -n "$PASSPHRASE" ] ; then
         gpg --symmetric --passphrase $PASSPHRASE --batch -o ${ENCRYPTED_DB_OUTPUT_FILE_NAME} $DB_OUTPUT_FILE_NAME
         rm $DB_OUTPUT_FILE_NAME
-	ln -s $ENCRYPTED_DB_OUTPUT_FILE_NAME $DB_LATEST_FILE_NAME
+    ln -s $ENCRYPTED_DB_OUTPUT_FILE_NAME $DB_LATEST_FILE_NAME
     else
       ln -s $DB_OUTPUT_FILE_NAME $DB_LATEST_FILE_NAME
-    fi	
-    if [ "$?" != "0" ]; then
-        echo; echo 'Something went wrong while taking local backup!'
-        rm -f $DB_OUTPUT_FILE_NAME &> /dev/null
     fi
 else
     echo 'Please install wp-cli and re-run this script'; exit 1;
