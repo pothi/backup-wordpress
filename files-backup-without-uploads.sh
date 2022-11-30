@@ -130,10 +130,7 @@ fi
 
 # path to be backed up
 WP_PATH=${SITES_PATH}/${DOMAIN}/${PUBLIC_DIR}
-if [ ! -d "$WP_PATH" ]; then
-    echo "$WP_PATH is not found. Please check the paths and adjust the variables in the script. Exiting now..."
-    exit 1
-fi
+[ ! -d "$WP_PATH" ] && echo "WordPress is not found at $WP_PATH" &&  exit 1
 
 echo "Script started on... $(date +%c)"
 

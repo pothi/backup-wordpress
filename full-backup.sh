@@ -138,10 +138,7 @@ echo "Script started on... $(date +%c)"
 
 # path to backup
 WP_PATH=${SITES_PATH}/${DOMAIN}/${PUBLIC_DIR}
-if [ ! -d "$WP_PATH" ]; then
-    echo "$WP_PATH is not found. Please check the paths and adjust the variables in the script. Exiting now..."
-    exit 1
-fi
+[ ! -d "$WP_PATH" ] && echo "WordPress is not found at $WP_PATH" &&  exit 1
 
 # path to be excluded from the backup
 # no trailing slash, please
@@ -201,7 +198,7 @@ else
     echo; echo 'Backup is successfully taken locally.'; echo
 fi
 
-[ -f $LATEST_FULL_BACKUP_FILE_NAME ] && rm $LATEST_FULL_BACKUP_FILE_NAME
+[ -L $LATEST_FULL_BACKUP_FILE_NAME ] && rm $LATEST_FULL_BACKUP_FILE_NAME
 ln -s ${FULL_BACKUP_FILE_NAME} $LATEST_FULL_BACKUP_FILE_NAME
 
 # remove the reduntant DB backup

@@ -132,10 +132,7 @@ if [ "$DOMAIN" == ""  ]; then
 fi
 
 WP_PATH=${SITES_PATH}/$DOMAIN/${PUBLIC_DIR}
-if [ ! -d "$WP_PATH" ]; then
-    echo; echo 'WordPress is not found at '$WP_PATH; echo "Usage ${script_name} domainname.tld (S3 bucket name)"; echo;
-    exit 1
-fi
+[ ! -d "$WP_PATH" ] && echo "WordPress is not found at $WP_PATH" &&  exit 1
 
 if [ "$AWS_BUCKET" == ""  ]; then
     if [ "$2" != "" ]; then
@@ -165,7 +162,7 @@ if [ -f "$wp_cli" ]; then
         rm -f $DB_OUTPUT_FILE_NAME &> /dev/null
     fi
 
-    [ -f $DB_LATEST_FILE_NAME ] && rm $DB_LATEST_FILE_NAME
+    [ -L $DB_LATEST_FILE_NAME ] && rm $DB_LATEST_FILE_NAME
     if [ -n "$PASSPHRASE" ] ; then
         gpg --symmetric --passphrase $PASSPHRASE --batch -o ${ENCRYPTED_DB_OUTPUT_FILE_NAME} $DB_OUTPUT_FILE_NAME
         rm $DB_OUTPUT_FILE_NAME
