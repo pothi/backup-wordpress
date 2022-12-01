@@ -8,9 +8,11 @@
 # Exit if any command gives an error
 # set -o errexit
 
-# version: 4.0.2
+# version: 4.0.3
 
 # changelog
+# version: 4.0.3
+#   - multiple fixes
 # version: 4.0.2
 #   - date: 2022-11-29
 #   - rewrite logic while attempting to create required directories
@@ -38,6 +40,10 @@
 #   from files-backup-without-uploads.sh script, we do not exclude uploads directory - just removed the line from it
 
 ### Variables ###
+
+# where to store the database backups?
+BACKUP_PATH=${HOME}/backups/full-backups
+ENCRYPTED_BACKUP_PATH=${HOME}/backups/encrypted-full-backups
 
 # a passphrase for encryption, in order to being able to use almost any special characters use ""
 PASSPHRASE=
@@ -172,7 +178,7 @@ $wp_cli --path=${WP_PATH} db export --no-tablespaces=true --add-drop-table $DB_O
 if [ "$?" != "0" ]; then
     echo; echo '[Warn] Something went wrong while taking DB backup!'
     # remove the empty backup file
-    rm -f $DB_OUTPUT_FILE_NAME &> /dev/null
+    [ -f $DB_OUTPUT_FILE_NAME ] && rm $DB_OUTPUT_FILE_NAME
 fi
 #------------- end of snippet from db-script.sh --------------#
 
@@ -202,7 +208,7 @@ fi
 ln -s ${FULL_BACKUP_FILE_NAME} $LATEST_FULL_BACKUP_FILE_NAME
 
 # remove the reduntant DB backup
-rm $DB_OUTPUT_FILE_NAME
+[ -f $DB_OUTPUT_FILE_NAME ] && rm $DB_OUTPUT_FILE_NAME
 
 # send backup to AWS S3 bucket
 if [ "$BUCKET_NAME" != "" ]; then

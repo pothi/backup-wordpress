@@ -3,9 +3,11 @@
 # requirements
 # ~/log, ~/backups, ~/path/to/example.com/public
 
-# version - 3.2.2
+# version - 3.2.3
 
 # changelog
+# version: 3.2.3
+#   - minor fixes
 # version: 3.2.2
 #   - date: 2022-11-29
 #   - rewrite logic while attempting to create required directories
@@ -146,9 +148,9 @@ fi
 # ex: example.com/test would become example.com-test
 DOMAIN_FULL_PATH=$(echo $DOMAIN | awk '{gsub(/\//,"_")}; 1')
 
-DB_OUTPUT_FILE_NAME=${BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-${timestamp}.sql.gz
+DB_OUTPUT_FILE_NAME=${BACKUP_PATH}/${DOMAIN_FULL_PATH}-${timestamp}.sql.gz
 ENCRYPTED_DB_OUTPUT_FILE_NAME=${ENCRYPTED_BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-${timestamp}.sql.gz
-DB_LATEST_FILE_NAME=${BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-latest.sql.gz
+DB_LATEST_FILE_NAME=${BACKUP_PATH}/${DOMAIN_FULL_PATH}-latest.sql.gz
 
 # to capture non-zero exit code in the pipeline
 set -o pipefail
@@ -159,16 +161,16 @@ if [ -f "$wp_cli" ]; then
     $wp_cli --path=${WP_PATH} db export --no-tablespaces=true --add-drop-table - | gzip > $DB_OUTPUT_FILE_NAME
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking local backup!'
-        rm -f $DB_OUTPUT_FILE_NAME &> /dev/null
+        [ -f $DB_OUTPUT_FILE_NAME ] && rm -f $DB_OUTPUT_FILE_NAME
     fi
 
     [ -L $DB_LATEST_FILE_NAME ] && rm $DB_LATEST_FILE_NAME
     if [ -n "$PASSPHRASE" ] ; then
         gpg --symmetric --passphrase $PASSPHRASE --batch -o ${ENCRYPTED_DB_OUTPUT_FILE_NAME} $DB_OUTPUT_FILE_NAME
-        rm $DB_OUTPUT_FILE_NAME
-    ln -s $ENCRYPTED_DB_OUTPUT_FILE_NAME $DB_LATEST_FILE_NAME
+        [ -f $DB_OUTPUT_FILE_NAME ] && rm -f $DB_OUTPUT_FILE_NAME
+        ln -s $ENCRYPTED_DB_OUTPUT_FILE_NAME $DB_LATEST_FILE_NAME
     else
-      ln -s $DB_OUTPUT_FILE_NAME $DB_LATEST_FILE_NAME
+        ln -s $DB_OUTPUT_FILE_NAME $DB_LATEST_FILE_NAME
     fi
 else
     echo 'Please install wp-cli and re-run this script'; exit 1;
