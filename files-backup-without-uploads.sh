@@ -55,14 +55,14 @@ BUCKET_NAME=
 # attempt to create log directory if it doesn't exist
 [ -d "${HOME}/log" ] || mkdir -p ${HOME}/log
 if [ "$?" -ne 0 ]; then
-    echo 'Log directory not found at ~/log'
+    echo "Log directory not found at ~/log. This script can't create it, either!"
     echo 'You may create it manually and re-run this script.'
     exit 1
 fi
 # attempt to create the backups directory, if it doesn't exist
 [ -d "$BACKUP_PATH" ] || mkdir -p $BACKUP_PATH
 if [ "$?" -ne 0 ]; then
-    echo "BACKUP_PATH is not found at $BACKUP_PATH. The script can't create it, either!"
+    echo "BACKUP_PATH is not found at $BACKUP_PATH. This script can't create it, either!"
     echo 'You may create it manually and re-run this script.'
     exit 1
 fi
@@ -70,7 +70,7 @@ fi
 if [ -n "$PASSPHRASE" ]; then
     [ -d "$ENCRYPTED_BACKUP_PATH" ] || mkdir -p $ENCRYPTED_BACKUP_PATH
     if [ "$?" -ne 0 ]; then
-        echo "ENCRYPTED_BACKUP_PATH Is not found at $ENCRYPTED_BACKUP_PATH. the script can't create it, either!"
+        echo "ENCRYPTED_BACKUP_PATH Is not found at $ENCRYPTED_BACKUP_PATH. This script can't create it, either!"
         echo 'You may create it manually and re-run this script.'
         exit 1
     fi
