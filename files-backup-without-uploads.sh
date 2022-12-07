@@ -80,7 +80,7 @@ log_file=${HOME}/log/backups.log
 exec > >(tee -a ${log_file} )
 exec 2> >(tee -a ${log_file} >&2)
 
-export PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/local/sbin
+export PATH=~/bin:~/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin
 
 declare -r script_name=$(basename "$0")
 declare -r timestamp=$(date +%F_%H-%M-%S)

@@ -93,7 +93,7 @@ exec 2> >(tee -a ${log_file} >&2)
 
 echo "Script started on... $(date +%c)"
 
-export PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/local/sbin
+export PATH=~/bin:~/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin
 
 declare -r script_name=$(basename "$0")
 declare -r timestamp=$(date +%F_%H-%M-%S)
