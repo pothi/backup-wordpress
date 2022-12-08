@@ -63,10 +63,11 @@ The above is applicable to all the scripts!
 
 ## Contributors
 
-The following people have contributed to this repo in various ways...
+Thanks to the following people who have contributed to this repo...
 
 - [Nik](https://github.com/nik-lampe)
 - [Francesco](https://github.com/Cicciodev)
+- [Wischweh Mobile Consultancy](https://github.com/wischweh)
 
 ### How to decrypt, if I used a passphrase
 

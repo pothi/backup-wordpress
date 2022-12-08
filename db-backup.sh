@@ -3,32 +3,9 @@
 # requirements
 # ~/log, ~/backups, ~/path/to/example.com/public
 
-# version - 3.2.3
-
-# changelog
-# version: 3.2.3
-#   - minor fixes
-# version: 3.2.2
-#   - date: 2022-11-29
-#   - rewrite logic while attempting to create required directories
-#   - add requirements section
-# version: 3.2.1
-#   - date: 2021-07-14
-#   - aws cli add option "--only-show-errors"
-# version: 3.2.0
-#   - date: 2021-03-27
-#   - improve naming scheme.
-# version: 3.1.1
-#   - date: 2020-11-24
-#   - improve documentation.
+# version - 5.0.0
 
 ### Variables - Please do not add trailing slash in the PATHs
-
-# To enable offsite backups...
-# apt install awscli (or yum install awscli)
-# legacy method
-# run 'pip install awscli' (as root)
-# aws configure (as normal user)
 
 # where to store the database backups?
 BACKUP_PATH=${HOME}/backups/db-backups
@@ -55,13 +32,10 @@ DOMAIN=
 # AWS Variable can be hard-coded here
 AWS_S3_BUCKET_NAME=
 
-# ref: http://docs.aws.amazon.com/cli/latest/userguide/cli-environment.html
-AWS_ACCESS_KEY_ID=
-AWS_SECRET_ACCESS_KEY=
-AWS_DEFAULT_REGION=
-AWS_PROFILE=
-
 #-------- Do NOT Edit Below This Line --------#
+
+# to capture non-zero exit code in the pipeline
+set -o pipefail
 
 # attempt to create log directory if it doesn't exist
 [ -d "${HOME}/log" ] || mkdir -p ${HOME}/log
@@ -91,8 +65,6 @@ log_file=${HOME}/log/backups.log
 exec > >(tee -a ${log_file} )
 exec 2> >(tee -a ${log_file} >&2)
 
-echo "Script started on... $(date +%c)"
-
 export PATH=~/bin:~/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin
 
 declare -r script_name=$(basename "$0")
@@ -110,6 +82,8 @@ if [ -z "$aws_cli" ]; then
     exit 1
 fi
 
+echo "'$script_name' started on... $(date +%c)"
+
 let AUTODELETEAFTER--
 
 # get environment variables, if exists
@@ -126,34 +100,32 @@ if [ "$DOMAIN" == ""  ]; then
         if [ "$WP_DOMAIN" != "" ]; then
             DOMAIN=$WP_DOMAIN
         else
-            echo 'Usage ${script_name} example.com (S3 bucket name)'; exit 1
+            echo "Usage $script_name example.com (S3 bucket name)"; exit 1
         fi
     else
         DOMAIN=$1
     fi
 fi
 
-WP_PATH=${SITES_PATH}/$DOMAIN/${PUBLIC_DIR}
-[ ! -d "$WP_PATH" ] && echo "WordPress is not found at $WP_PATH" &&  exit 1
-
-if [ "$AWS_BUCKET" == ""  ]; then
+if [ "$BUCKET_NAME" == ""  ]; then
     if [ "$2" != "" ]; then
-        AWS_BUCKET=$2
+        BUCKET_NAME=$2
     elif [ "$AWS_S3_BUCKET_NAME" != "" ]; then
-        AWS_BUCKET=$AWS_S3_BUCKET_NAME
+        BUCKET_NAME=$AWS_S3_BUCKET_NAME
     fi
 fi
 
+# WordPress root
+WP_PATH=${SITES_PATH}/${DOMAIN}/${PUBLIC_DIR}
+[ ! -d "$WP_PATH" ] && echo "WordPress is not found at $WP_PATH" &&  exit 1
+
 # convert forward slash found in sub-directories to hyphen
 # ex: example.com/test would become example.com-test
-DOMAIN_FULL_PATH=$(echo $DOMAIN | awk '{gsub(/\//,"_")}; 1')
+DOMAIN_FULL_PATH=$(echo $DOMAIN | awk '{gsub(/\//,"-")}; 1')
 
 DB_OUTPUT_FILE_NAME=${BACKUP_PATH}/${DOMAIN_FULL_PATH}-${timestamp}.sql.gz
 ENCRYPTED_DB_OUTPUT_FILE_NAME=${ENCRYPTED_BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-${timestamp}.sql.gz
 DB_LATEST_FILE_NAME=${BACKUP_PATH}/${DOMAIN_FULL_PATH}-latest.sql.gz
-
-# to capture non-zero exit code in the pipeline
-set -o pipefail
 
 # take actual DB backup
 if [ -f "$wp_cli" ]; then
@@ -177,15 +149,11 @@ else
 fi
 
 # external backup
-if [ "$AWS_BUCKET" != "" ]; then
-    if [ ! -e "$aws_cli" ] ; then
-        echo; echo 'Did you run "pip install aws && aws configure"'; echo;
-    fi
-
+if [ "$BUCKET_NAME" != "" ]; then
     if [ -z "$PASSPHRASE" ] ; then
-        $aws_cli s3 cp $DB_OUTPUT_FILE_NAME s3://$AWS_BUCKET/${DOMAIN_FULL_PATH}/db-backups/ --only-show-errors
+        $aws_cli s3 cp $DB_OUTPUT_FILE_NAME s3://$BUCKET_NAME/${DOMAIN_FULL_PATH}/db-backups/ --only-show-errors
     else
-        $aws_cli s3 cp $ENCRYPTED_DB_OUTPUT_FILE_NAME s3://$AWS_BUCKET/${DOMAIN_FULL_PATH}/encrypted-db-backups/ --only-show-errors
+        $aws_cli s3 cp $ENCRYPTED_DB_OUTPUT_FILE_NAME s3://$BUCKET_NAME/${DOMAIN_FULL_PATH}/encrypted-db-backups/ --only-show-errors
     fi
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking offsite backup';

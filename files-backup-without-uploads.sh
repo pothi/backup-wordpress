@@ -1,39 +1,6 @@
 #!/bin/bash
 
-# version: 3.1.2
-
-# Changelog
-# version: 3.1.2
-#   - date: 2022-11-29
-#   - rewrite logic while attempting to create required directories
-# v3.1.1
-#   - date: 2020-11-24
-#   - improve documentation
-# v2
-#   - date 2017-09-13
-#   - change of script name
-#   - change the output file name
-#   - remove older backups using a simple find command; props - @wpbullet
-# v1.1.2
-#   - date 2017-09-04
-#   - dynamically find the location of aws cli
-# v1.1.1
-#   - date 2017-09-03
-#   - change the default dir name from Backup to backups
-#   - no more syncing by default
-# v1.1
-#   - date 2017-05-05
-#   - moved to nightly backups
-#   - started excluding wp core files and uploads
-#   - uploads files are now synced, rather than taken as part of regular nightly backup
-# v1.0.4
-#   - date 2017-03-06
-#   - support for hard-coded variable AWS S3 Bucket Name
-#   - support for environment files (.envrc / .env)
-#   - skipped version 1.0.3
-# v1.0.2
-#   - date 2017-03-06
-#   - support for hard-coded variable $DOMAIN
+# version: 5.0.0
 
 # Variable
 AUTODELETEAFTER=30
@@ -51,6 +18,9 @@ DOMAIN=
 BUCKET_NAME=
 
 #-------- Do NOT Edit Below This Line --------#
+
+# to capture non-zero exit code in the pipeline
+set -o pipefail
 
 # attempt to create log directory if it doesn't exist
 [ -d "${HOME}/log" ] || mkdir -p ${HOME}/log
@@ -97,6 +67,8 @@ if [ -z "$aws_cli" ]; then
     exit 1
 fi
 
+echo "'$script_name' started on... $(date +%c)"
+
 let AUTODELETEAFTER--
 
 # get environment variables, if exists
@@ -113,7 +85,7 @@ if [ "$DOMAIN" == ""  ]; then
         if [ "$WP_DOMAIN" != "" ]; then
             DOMAIN=$WP_DOMAIN
         else
-            echo "Usage ${script_name} domainname.com (S3 bucket name)"; exit 1
+            echo "Usage $script_name example.com (S3 bucket name)"; exit 1
         fi
     else
         DOMAIN=$1
@@ -128,11 +100,9 @@ if [ "$BUCKET_NAME" == ""  ]; then
     fi
 fi
 
-# path to be backed up
+# WordPress root
 WP_PATH=${SITES_PATH}/${DOMAIN}/${PUBLIC_DIR}
 [ ! -d "$WP_PATH" ] && echo "WordPress is not found at $WP_PATH" &&  exit 1
-
-echo "Script started on... $(date +%c)"
 
 # path to be excluded from the backup
 # no trailing slash, please
@@ -162,10 +132,6 @@ BACKUP_FILE_NAME=${BACKUP_PATH}/files-without-uploads-${DOMAIN}-$timestamp.tar.g
 tar hczf ${BACKUP_FILE_NAME} -C ${SITES_PATH} ${EXCLUDES} ${DOMAIN} &> /dev/null
 
 if [ "$BUCKET_NAME" != "" ]; then
-    if [ ! -e "$aws_cli" ] ; then
-        echo; echo 'Did you run "pip install aws && aws configure"'; echo;
-    fi
-
     $aws_cli s3 cp ${BACKUP_FILE_NAME} s3://$BUCKET_NAME/${DOMAIN}/files-backup-without-uploads/ --only-show-errors
     if [ "$?" != "0" ]; then
         echo; echo 'Something went wrong while taking offsite backup'; echo

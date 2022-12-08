@@ -3,37 +3,7 @@
 # requirements
 # ~/log, ~/backups, ~/path/to/example.com/public
 
-# Don't allow unset variables
-# set -o nounset
-# Exit if any command gives an error
-# set -o errexit
-
-# version: 4.0.3
-
-# changelog
-# version: 4.0.3
-#   - multiple fixes
-# version: 4.0.2
-#   - date: 2022-11-29
-#   - rewrite logic while attempting to create required directories
-#   - add requirements section
-# version: 4.0.1
-#   - date: 2021-08-30
-#   - fix a minor bug
-# version: 4.0.0
-#   - date: 2021-06-06
-#   - simplify excludes in tar command
-#   - simplify naming scheme for encrypted backups
-#   - show only errors while uploading to S3. Not even progress bar.
-# version: 3.2.0
-#   - date: 2021-03-27
-#   - improve naming scheme.
-# changelog
-# version: 3.1.1
-#   - date: 2020-11-24
-#   - improve documentation
-# version: 3.1.0
-#   - delete old backups in $ENCRYPTED_BACKUP_PATH only if this directory / path exists
+# version: 5.0.0
 
 # this script is basically
 #   files-backup-without-uploads.sh script + part of db-backup.sh script
@@ -65,6 +35,9 @@ DOMAIN=
 BUCKET_NAME=
 
 #-------- Do NOT Edit Below This Line --------#
+
+# to capture non-zero exit code in the pipeline
+set -o pipefail
 
 # attempt to create log directory if it doesn't exist
 [ -d "${HOME}/log" ] || mkdir -p ${HOME}/log
@@ -111,6 +84,8 @@ if [ -z "$aws_cli" ]; then
     exit 1
 fi
 
+echo "'$script_name' started on... $(date +%c)"
+
 let AUTODELETEAFTER--
 
 # get environment variables, if exists
@@ -142,9 +117,7 @@ if [ "$BUCKET_NAME" == ""  ]; then
     fi
 fi
 
-echo "Script started on... $(date +%c)"
-
-# path to backup
+# WordPress root
 WP_PATH=${SITES_PATH}/${DOMAIN}/${PUBLIC_DIR}
 [ ! -d "$WP_PATH" ] && echo "WordPress is not found at $WP_PATH" &&  exit 1
 
@@ -170,9 +143,6 @@ done
 
 #------------- from db-script.sh --------------#
 DB_OUTPUT_FILE_NAME=${SITES_PATH}/${DOMAIN}/db.sql
-
-# to capture non-zero exit code in the pipeline
-set -o pipefail
 
 # take actual DB backup
 $wp_cli --path=${WP_PATH} transient delete --all
@@ -214,13 +184,6 @@ ln -s ${FULL_BACKUP_FILE_NAME} $LATEST_FULL_BACKUP_FILE_NAME
 
 # send backup to AWS S3 bucket
 if [ "$BUCKET_NAME" != "" ]; then
-    if [ ! -e "$aws_cli" ]; then
-        echo "[Warn] aws-cli is not found in \$PATH. Exiting."
-        echo "PATH: $PATH"
-        echo "AWS Bucket Name: '$BUCKET_NAME'."
-        exit 1
-    fi
-
     $aws_cli s3 cp ${FULL_BACKUP_FILE_NAME} s3://$BUCKET_NAME/${DOMAIN}/full-backups/ --only-show-errors
 
     if [ "$?" != "0" ]; then
