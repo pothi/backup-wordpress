@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# version: 5.0.0
+# version: 5.1.0
 
 # Variable
 AUTODELETEAFTER=30
@@ -67,6 +67,12 @@ if [ -z "$aws_cli" ]; then
     exit 1
 fi
 
+cPanel=$(/usr/local/cpanel/cpanel -V 2>/dev/null)
+if [ ! -z "$cPanel" ]; then
+    SITES_PATH=$HOME
+    PUBLIC_DIR=public_html
+fi
+
 echo "'$script_name' started on... $(date +%c)"
 
 let AUTODELETEAFTER--
@@ -102,6 +108,8 @@ fi
 
 # WordPress root
 WP_PATH=${SITES_PATH}/${DOMAIN}/${PUBLIC_DIR}
+# For cPanel - main site
+[ ! -d "$WP_PATH" ] && WP_PATH=${SITES_PATH}/${PUBLIC_DIR}
 [ ! -d "$WP_PATH" ] && echo "WordPress is not found at $WP_PATH" &&  exit 1
 
 # path to be excluded from the backup

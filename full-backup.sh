@@ -3,7 +3,7 @@
 # requirements
 # ~/log, ~/backups, ~/path/to/example.com/public
 
-# version: 5.0.0
+# version: 5.1.0
 
 # this script is basically
 #   files-backup-without-uploads.sh script + part of db-backup.sh script
@@ -117,20 +117,24 @@ if [ "$BUCKET_NAME" == ""  ]; then
     fi
 fi
 
-# WordPress root
-WP_PATH=${SITES_PATH}/${DOMAIN}/${PUBLIC_DIR}
+cPanel=$(/usr/local/cpanel/cpanel -V 2>/dev/null)
+if [ "$cPanel" ]; then
+    SITES_PATH=$HOME
+    PUBLIC_DIR=public_html
+    dir_to_backup=public_html
+    WP_PATH=${SITES_PATH}/${PUBLIC_DIR}
+else
+    dir_to_backup=${DOMAIN}
+    WP_PATH=${SITES_PATH}/${DOMAIN}/${PUBLIC_DIR}
+fi
+
 [ ! -d "$WP_PATH" ] && echo "WordPress is not found at $WP_PATH" &&  exit 1
 
 # path to be excluded from the backup
 # no trailing slash, please
-EXCLUDE_BASE_PATH=${DOMAIN}
-if [ "$PUBLIC_DIR" != "" ]; then
-    EXCLUDE_BASE_PATH=${EXCLUDE_BASE_PATH}/${PUBLIC_DIR}
-fi
-
 declare -a EXC_PATH
-EXC_PATH[0]=${EXCLUDE_BASE_PATH}/.git
-EXC_PATH[1]=${EXCLUDE_BASE_PATH}/wp-content/cache
+EXC_PATH[0]=${WP_PATH}/.git
+EXC_PATH[1]=${WP_PATH}/wp-content/cache
 # need more? - just use the above format
 # all log files are excluded already.
 
@@ -142,7 +146,7 @@ for i in "${!EXC_PATH[@]}" ; do
 done
 
 #------------- from db-script.sh --------------#
-DB_OUTPUT_FILE_NAME=${SITES_PATH}/${DOMAIN}/db.sql
+DB_OUTPUT_FILE_NAME=${WP_PATH}/db.sql
 
 # take actual DB backup
 $wp_cli --path=${WP_PATH} transient delete --all
@@ -163,11 +167,11 @@ if [ ! -z "$PASSPHRASE" ]; then
     # using symmetric encryption
     # option --batch to avoid passphrase prompt
     # encrypting database dump
-    tar hcz -C ${SITES_PATH} --exclude='*.log' ${EXCLUDES} ${DOMAIN} | gpg --symmetric --passphrase $PASSPHRASE --batch -o $FULL_BACKUP_FILE_NAME
+    tar hcz -C ${SITES_PATH} --exclude='*.log' ${EXCLUDES} ${dir_to_backup} | gpg --symmetric --passphrase $PASSPHRASE --batch -o $FULL_BACKUP_FILE_NAME
 else
     echo "[Warn] No passphrase provided for encryption!"
     echo "[Warn] If you are from Europe, please check GDPR compliance."
-    tar hczf ${FULL_BACKUP_FILE_NAME} -C ${SITES_PATH} ${EXCLUDES} ${DOMAIN} &> /dev/null
+    tar hczf ${FULL_BACKUP_FILE_NAME} --exclude='*.log' ${EXCLUDES} -C ${SITES_PATH} ${dir_to_backup} &> /dev/null
 fi
 if [ "$?" != "0" ]; then
     echo; echo 'Something went wrong while taking full backup'; echo

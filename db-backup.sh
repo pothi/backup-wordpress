@@ -3,7 +3,7 @@
 # requirements
 # ~/log, ~/backups, ~/path/to/example.com/public
 
-# version - 5.0.0
+# version - 5.1.0
 
 ### Variables - Please do not add trailing slash in the PATHs
 
@@ -13,11 +13,9 @@ ENCRYPTED_BACKUP_PATH=${HOME}/backups/encrypted-db-backups
 
 # the script assumes your sites are stored like ~/sites/example.com/public, ~/sites/example.net/public, ~/sites/example.org/public and so on.
 # if you have a different pattern, such as ~/app/example.com/public, please change the following to fit the server environment!
-# cPanel - SITES_PATH=$HOME
 SITES_PATH=${HOME}/sites
 
 # if WP is in a sub-directory, please leave this empty!
-# cPanel - PUBLIC_DIR=public_html
 PUBLIC_DIR=public
 
 # a passphrase for encryption, in order to being able to use almost any special characters use ""
@@ -82,6 +80,12 @@ if [ -z "$aws_cli" ]; then
     exit 1
 fi
 
+cPanel=$(/usr/local/cpanel/cpanel -V 2>/dev/null)
+if [ ! -z "$cPanel" ]; then
+    SITES_PATH=$HOME
+    PUBLIC_DIR=public_html
+fi
+
 echo "'$script_name' started on... $(date +%c)"
 
 let AUTODELETEAFTER--
@@ -117,6 +121,8 @@ fi
 
 # WordPress root
 WP_PATH=${SITES_PATH}/${DOMAIN}/${PUBLIC_DIR}
+# For cPanel - main site
+[ ! -d "$WP_PATH" ] && WP_PATH=${SITES_PATH}/${PUBLIC_DIR}
 [ ! -d "$WP_PATH" ] && echo "WordPress is not found at $WP_PATH" &&  exit 1
 
 # convert forward slash found in sub-directories to hyphen
@@ -124,7 +130,7 @@ WP_PATH=${SITES_PATH}/${DOMAIN}/${PUBLIC_DIR}
 DOMAIN_FULL_PATH=$(echo $DOMAIN | awk '{gsub(/\//,"-")}; 1')
 
 DB_OUTPUT_FILE_NAME=${BACKUP_PATH}/${DOMAIN_FULL_PATH}-${timestamp}.sql.gz
-ENCRYPTED_DB_OUTPUT_FILE_NAME=${ENCRYPTED_BACKUP_PATH}/db-${DOMAIN_FULL_PATH}-${timestamp}.sql.gz
+ENCRYPTED_DB_OUTPUT_FILE_NAME=${ENCRYPTED_BACKUP_PATH}/${DOMAIN_FULL_PATH}-${timestamp}.sql.gz
 DB_LATEST_FILE_NAME=${BACKUP_PATH}/${DOMAIN_FULL_PATH}-latest.sql.gz
 
 # take actual DB backup

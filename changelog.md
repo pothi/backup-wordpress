@@ -1,3 +1,9 @@
+version: 5.1.0
+    - date: 2022-12-21
+    - Add support for cPanel (main site).
+    - Change naming scheme for DB backups.
+    - Simplify logics.
+
 version: 5.0.0
     - date: 2022-12-08
     - Add user bin directories and snap bin to PATH.
