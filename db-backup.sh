@@ -3,7 +3,7 @@
 # requirements
 # ~/log, ~/backups, ~/path/to/example.com/public
 
-# version - 5.1.0
+# version - 5.2.0
 
 ### Variables - Please do not add trailing slash in the PATHs
 
@@ -22,7 +22,7 @@ PUBLIC_DIR=public
 PASSPHRASE=
 
 # auto delete older backups after certain number days - default 60. YMMV
-AUTODELETEAFTER=60
+AUTODELETEAFTER=30
 
 # You may hard-code the domain name
 DOMAIN=

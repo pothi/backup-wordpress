@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# version: 5.1.0
+# version: 5.2.0
 
 # Variable
-AUTODELETEAFTER=30
+AUTODELETEAFTER=15
 
 # the script assumes your sites are stored like ~/sites/example.com, ~/sites/example.net, ~/sites/example.org and so on.
 # if you have a different pattern, such as ~/app/example.com, please change the following to fit the server environment!

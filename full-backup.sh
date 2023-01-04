@@ -3,7 +3,7 @@
 # requirements
 # ~/log, ~/backups, ~/path/to/example.com/public
 
-# version: 5.1.0
+# version: 5.2.0
 
 # this script is basically
 #   files-backup-without-uploads.sh script + part of db-backup.sh script
@@ -19,7 +19,7 @@ ENCRYPTED_BACKUP_PATH=${HOME}/backups/encrypted-full-backups
 PASSPHRASE=
 
 # auto delete older backups after certain number days - default 30. YMMV
-AUTODELETEAFTER=30
+AUTODELETEAFTER=7
 
 # the script assumes your sites are stored like ~/sites/example.com, ~/sites/example.net, ~/sites/example.org and so on.
 # if you have a different pattern, such as ~/app/example.com, please change the following to fit the server environment!

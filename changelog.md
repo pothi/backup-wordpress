@@ -1,3 +1,7 @@
+version: 5.2.0
+    - date: 2023-01-04
+    - Reduce the default number of days to keep the backups
+
 version: 5.1.0
     - date: 2022-12-21
     - Add support for cPanel (main site).
