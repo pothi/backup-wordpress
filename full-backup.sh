@@ -3,7 +3,7 @@
 # requirements
 # ~/log, ~/backups, ~/path/to/example.com/public
 
-# version: 5.2.0
+# version: 5.2.1
 
 # this script is basically
 #   files-backup-without-uploads.sh script + part of db-backup.sh script
@@ -171,7 +171,7 @@ if [ ! -z "$PASSPHRASE" ]; then
 else
     echo "[Warn] No passphrase provided for encryption!"
     echo "[Warn] If you are from Europe, please check GDPR compliance."
-    tar hczf ${FULL_BACKUP_FILE_NAME} --exclude='*.log' ${EXCLUDES} -C ${SITES_PATH} ${dir_to_backup} &> /dev/null
+    tar hczf ${FULL_BACKUP_FILE_NAME} --exclude='*.log' ${EXCLUDES} -C ${SITES_PATH} ${dir_to_backup} > /dev/null
 fi
 if [ "$?" != "0" ]; then
     echo; echo 'Something went wrong while taking full backup'; echo

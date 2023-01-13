@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# version: 5.2.0
+# version: 5.2.1
 
 # Variable
 AUTODELETEAFTER=15
@@ -137,7 +137,7 @@ BACKUP_FILE_NAME=${BACKUP_PATH}/files-without-uploads-${DOMAIN}-$timestamp.tar.g
 
 # let's do it using tar
 # Create a fresh backup
-tar hczf ${BACKUP_FILE_NAME} -C ${SITES_PATH} ${EXCLUDES} ${DOMAIN} &> /dev/null
+tar hczf ${BACKUP_FILE_NAME} -C ${SITES_PATH} ${EXCLUDES} ${DOMAIN} > /dev/null
 
 if [ "$BUCKET_NAME" != "" ]; then
     $aws_cli s3 cp ${BACKUP_FILE_NAME} s3://$BUCKET_NAME/${DOMAIN}/files-backup-without-uploads/ --only-show-errors

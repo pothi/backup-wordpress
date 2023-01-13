@@ -1,3 +1,7 @@
+version: 5.2.1
+    - date: 2023-01-13
+    - show stderr for tar
+
 version: 5.2.0
     - date: 2023-01-04
     - Reduce the default number of days to keep the backups
@@ -16,6 +20,8 @@ version: 5.0.0
     - migrate laravel and php backup scripts to their own repo.
     - remove redundant check for aws cli.
     - better documentation.
+
+-----------------------------------------------------------------------------
 
 Before 5.0.0, separate changelogs were used.
 
