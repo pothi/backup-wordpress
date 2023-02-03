@@ -1,3 +1,7 @@
+version: 5.3.0
+    - date: 2023-02-03
+    - alert upon success
+
 version: 5.2.1
     - date: 2023-01-13
     - show stderr for tar

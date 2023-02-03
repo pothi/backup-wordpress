@@ -1,0 +1,3 @@
+# fill any of the following to send alerts upon failures
+export ADMIN_EMAIL=
+export BACKUP_ADMIN_EMAIL=

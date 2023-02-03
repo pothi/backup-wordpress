@@ -3,7 +3,7 @@
 # requirements
 # ~/log, ~/backups, ~/path/to/example.com/public
 
-# version: 5.2.1
+# version: 5.3.0
 
 # this script is basically
 #   files-backup-without-uploads.sh script + part of db-backup.sh script
@@ -96,6 +96,8 @@ let AUTODELETEAFTER--
 # 1 - hard-coded value
 # 2 - optional parameter while invoking the script
 # 3 - environment files
+
+alertEmail=${BACKUP_ADMIN_EMAIL:-${ADMIN_EMAIL:-""}}
 
 if [ "$DOMAIN" == ""  ]; then
     if [ "$1" == "" ]; then
@@ -191,10 +193,18 @@ if [ "$BUCKET_NAME" != "" ]; then
     $aws_cli s3 cp ${FULL_BACKUP_FILE_NAME} s3://$BUCKET_NAME/${DOMAIN}/full-backups/ --only-show-errors
 
     if [ "$?" != "0" ]; then
-        echo; echo '[Warn] Something went wrong while taking offsite backup.'; echo
+        msg='[Warn] Something went wrong while taking offsite backup.'
+        echo; echo $msg; echo
         echo "Check $log_file for any log info"; echo
     else
-        echo; echo 'Offsite backup successful.'; echo
+        msg='Offsite backup successful.'
+        echo; echo $msg; echo
+    fi
+
+    if [ "$alertEmail" ]; then
+        if [ -f /usr/bin/mail ]; then
+            echo $msg | mail -s 'Offsite Backup Info' $alertEmail
+        fi
     fi
 fi
 
