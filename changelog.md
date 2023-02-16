@@ -1,3 +1,9 @@
+version: 6.0.0
+    - date: 2023-02-16
+    - pass important variables as arguments. No breaking changes. Old usage format still works.
+    - change the default location of DB backup inside a full backup
+    - fix and simplify excludes in full backup.
+
 version: 5.3.0
     - date: 2023-02-03
     - alert upon success

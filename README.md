@@ -15,6 +15,7 @@ There are plenty of plugins available to take backups within WordPress. However,
 - Automatic deletion of local backups.
 - Support for sub-directory installation of WordPress!
 - Support for simple encryption using GnuPG
+- Alert via email when the offsite backup fails (and succeeds)
 
 ## Roadmap
 
@@ -58,6 +59,8 @@ There are plenty of plugins available to take backups within WordPress. However,
 /path/to/db-backup.sh example2.com
 /path/to/db-backup.sh example3.com
 ```
+
+For more usage options, please run `/path/to/db-backup.sh -h`.
 
 The above is applicable to all the scripts!
 
