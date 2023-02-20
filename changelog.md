@@ -1,3 +1,7 @@
+version: 6.0.3
+    - date: 2023-02-20
+    - improve docs
+
 version: 6.0.0
     - date: 2023-02-16
     - pass important variables as arguments. No breaking changes. Old usage format still works.

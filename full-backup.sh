@@ -3,7 +3,7 @@
 # requirements
 # ~/log, ~/backups, ~/path/to/example.com/public
 
-version=6.0.0
+version=6.0.3
 
 # this script is basically
 #   files-backup-without-uploads.sh script + part of db-backup.sh script
@@ -33,6 +33,8 @@ exec > >(tee -a "${log_file}")
 exec 2> >(tee -a "${log_file}" >&2)
 
 # Variables defined later in the script
+script_name=$(basename "$0")
+timestamp=$(date +%F_%H-%M-%S)
 success_alert=
 custom_email=
 custom_wp_path=
@@ -46,21 +48,19 @@ PUBLIC_DIR=public
 
 # printf 'Usage: %s [-b|--bucket <name>] [-k|--keepfor <days>] [-e|--email <email-address>] [-p|--path <WP path>] [-v|--version] [-h|--help] example.com\n' "$0"
 print_help() {
-    printf '%s\n' "Take a full backup - DB and files"
-    echo
-    printf 'Usage: %s [-b <name>] [-k <days>] [-e <email-address>] [-s] [-p <WP path>] [-v] [-h] example.com\n' "$0"
-    echo
+    printf '%s\n\n' "Take a database backup"
+
+    printf 'Usage: %s [-b <name>] [-k <days>] [-e <email-address>] [-s] [-p <WP path>] [-v] [-h] example.com\n\n' "$script_name"
+
     printf '\t%s\t%s\n' "-b, --bucket" "Name of the bucket for offsite backup (default: none)"
     printf '\t%s\t%s\n' "-k, --keepfor" "# of days to keep the local backups (default: 7)"
     printf '\t%s\t%s\n' "-e, --email" "Email to send success/failures alerts (default: root@localhost)"
     printf '\t%s\t%s\n' "-s, --success" "Alert on successful backup too (default: alert only on failures)"
     printf '\t%s\t%s\n' "-p, --path" "Path to WP files (default: ~/sites/example.com/public or ~/public_html for cPanel)"
-    echo
     printf '\t%s\t%s\n' "-v, --version" "Prints the version info"
     printf '\t%s\t%s\n' "-h, --help" "Prints help"
 
-    echo
-    echo "For more info, changelog and documentation... https://github.com/pothi/backup-wordpress"
+    printf "\nFor more info, changelog and documentation... https://github.com/pothi/backup-wordpress\n"
 }
 
 # https://stackoverflow.com/a/62616466/1004587
@@ -148,12 +148,9 @@ fi
 
 export PATH=~/bin:~/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin
 
-timestamp=$(date +%F_%H-%M-%S)
-script_name=$(basename "$0")
-
 command -v wp >/dev/null || { echo >&2 "wp cli is not found in $PATH. Exiting."; exit 1; }
-command -v aws >/dev/null || { echo >&2 "aws cli is not found in $PATH. Exiting."; exit 1; }
-command -v mail >/dev/null || echo >&2 "[WARNING]: 'mail' command is not found in $PATH; Alerts will not be sent!"
+command -v aws >/dev/null || { echo >&2 "[Warn]: aws cli is not found in \$PATH. Offsite backups will not be taken!"; }
+command -v mail >/dev/null || echo >&2 "[Warn]: 'mail' command is not found in \$PATH; Email alerts will not be sent!"
 
 ((AUTODELETEAFTER--))
 
@@ -185,7 +182,7 @@ if [ "$custom_wp_path" ]; then
     db_dump=${custom_wp_path}/db.sql
 fi
 
-[ ! -d "$WP_PATH" ] && echo "WordPress is not found at $WP_PATH" &&  exit 1
+[ -d "$WP_PATH" ] || { echo >&2 "WordPress is not found at ${WP_PATH}"; exit 1; }
 
 echo "'$script_name' started on... $(date +%c)"
 
@@ -211,8 +208,8 @@ done
 # take actual DB backup
 wp --path="${WP_PATH}" transient delete --all
 if ! wp --path="${WP_PATH}" db export --no-tablespaces=true --add-drop-table "$db_dump"; then
-    msg='[Error] Something went wrong while taking DB dump!'
-    echo; echo "$msg"; echo
+    msg="$script_name - [Error] Something went wrong while taking DB dump!"
+    printf "\n%s\n\n" "$msg"
     echo "$msg" | mail -s 'DB Dump Failure' "$alertEmail"
     # remove the empty backup file
     [ -f "$db_dump" ] && rm "$db_dump"
@@ -235,14 +232,14 @@ else
     # tar hczf ${FULL_BACKUP_FILE_NAME} --warning=no-file-changed ${EXCLUDES} -C ${SITES_PATH} ${dir_to_backup} > /dev/null
     tar hczf "${FULL_BACKUP_FILE_NAME}" "${EXCLUDES}" -C "${SITES_PATH}" "${dir_to_backup}" > /dev/null
 fi
-if [ "$?" != "0" ]; then
-    msg='[Warn] Something went wrong while taking a full backup. Please see the logs for more info!'
-    echo; echo "$msg"; echo
+if [ "$?" = "0" ]; then
+    printf "\nBackup is successfully taken locally.\n\n"
+else
+    msg="$script_name - [Warn] Something went wrong while taking local backup."
+    printf "\n%s\n\n" "$msg"
     echo "$msg" | mail -s 'Full backup may have failed!' "$alertEmail"
     # Do not exit as tar exists with error code 1 even under certain warnings
     # exit 1
-else
-    echo; echo 'Backup is successfully taken locally.'; echo
 fi
 
 # Remove the old link to latest backup and update it to the current backup file.
@@ -257,12 +254,12 @@ if [ "$BUCKET_NAME" != "" ]; then
     cmd="aws s3 cp ${FULL_BACKUP_FILE_NAME} s3://$BUCKET_NAME/${DOMAIN}/full-backups/ --only-show-errors"
 
     if $cmd; then
-        msg='Offsite backup successful.'
-        echo; echo "$msg"; echo
+        msg="$script_name - Offsite backup successful."
+        printf "\n%s\n\n" "$msg"
         [ "$success_alert" ] && echo "$msg" | mail -s 'Offsite Backup Info' "$alertEmail"
     else
-        msg='[Error] Something went wrong while taking offsite backup.'
-        echo; echo "$msg"; echo
+        msg="$script_name - [Error] Something went wrong while taking offsite backup."
+        printf "\n%s\n\n" "$msg"
         echo "$msg" | mail -s 'Offsite Backup Info' "$alertEmail"
     fi
 fi
@@ -273,5 +270,4 @@ find -L "$BACKUP_PATH" -type f -mtime +$AUTODELETEAFTER -exec rm {} \;
 echo "Full backup is done; please check the latest backup in '${BACKUP_PATH}'."
 echo "Latest backup is at ${FULL_BACKUP_FILE_NAME}"
 
-echo "Script ended on... $(date +%c)"
-echo
+printf "Script ended on...%s\n\n" "$(date +%c)"
