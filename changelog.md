@@ -1,3 +1,11 @@
+version: 6.1.1
+    - date: 2023-02-21
+    - fix a major bug while taking files backup.
+    - introduce debug variable to print important values.
+    - suppress warnings in the output of wp transient delete.
+    - remove sourcing ~/.env
+    - improve docs
+
 version: 6.0.3
     - date: 2023-02-20
     - improve docs

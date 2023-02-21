@@ -3,7 +3,7 @@
 # requirements
 # ~/log, ~/backups, ~/path/to/example.com/public
 
-version=6.0.3
+version=6.1.1
 
 ### Variables - Please do not add trailing slash in the PATHs
 
@@ -22,7 +22,12 @@ PASSPHRASE=
 # if you have a different pattern, such as ~/app/example.com, please change the following to fit the server environment!
 SITES_PATH=${HOME}/sites
 
+# To debug, use any value for "debug", otherwise please leave it empty
+debug=
+
 #-------- Do NOT Edit Below This Line --------#
+
+[ "$debug" ] && set -x
 
 log_file=${HOME}/log/backups.log
 exec > >(tee -a "${log_file}")
@@ -39,8 +44,11 @@ DOMAIN=
 PUBLIC_DIR=public
 
 # get environment variables, if exists
+# .envrc is in the following format
+# export VARIABLE=value
 [ -f "$HOME/.envrc" ] && source ~/.envrc
-[ -f "$HOME/.env" ] && source ~/.env
+# uncomment the following, if you use .env with the format "VARIABLE=value" (without export)
+# if [ -f "$HOME/.env" ]; then; set -a; source ~/.env; set +a; fi
 
 print_help() {
     printf '%s\n\n' "Take a database backup"
@@ -189,7 +197,8 @@ DB_OUTPUT_FILE_NAME=${BACKUP_PATH}/${DOMAIN_FULL_PATH}-${timestamp}.sql.gz
 DB_LATEST_FILE_NAME=${BACKUP_PATH}/${DOMAIN_FULL_PATH}-latest.sql.gz
 
 # take actual DB backup
-wp --path="${WP_PATH}" transient delete --all
+# 2>/dev/null to suppress any warnings / errors
+wp --path="${WP_PATH}" transient delete --all 2>/dev/null
 if [ -n "$PASSPHRASE" ] ; then
     DB_OUTPUT_FILE_NAME="${DB_OUTPUT_FILE_NAME}".gpg
     wp --path="${WP_PATH}" db export --no-tablespaces=true --add-drop-table - | gzip | gpg --symmetric --passphrase "$PASSPHRASE" --batch -o "$DB_OUTPUT_FILE_NAME"

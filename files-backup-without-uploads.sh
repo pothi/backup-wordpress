@@ -4,7 +4,7 @@
 # no DB backup
 # Excludes contain uploads folder.
 
-version=6.0.3
+version=6.1.1
 
 ### Variables ###
 
@@ -23,7 +23,12 @@ PASSPHRASE=
 # if you have a different pattern, such as ~/app/example.com, please change the following to fit the server environment!
 SITES_PATH=${HOME}/sites
 
+# To debug, use any value for "debug", otherwise please leave it empty
+debug=
+
 #-------- Do NOT Edit Below This Line --------#
+
+[ "$debug" ] && set -x
 
 log_file=${HOME}/log/backups.log
 exec > >(tee -a "${log_file}")
@@ -40,8 +45,11 @@ DOMAIN=
 PUBLIC_DIR=public
 
 # get environment variables, if exists
+# .envrc is in the following format
+# export VARIABLE=value
 [ -f "$HOME/.envrc" ] && source ~/.envrc
-[ -f "$HOME/.env" ] && source ~/.env
+# uncomment the following, if you use .env with the format "VARIABLE=value" (without export)
+# if [ -f "$HOME/.env" ]; then; set -a; source ~/.env; set +a; fi
 
 # printf 'Usage: %s [-b|--bucket <name>] [-k|--keepfor <days>] [-e|--email <email-address>] [-p|--path <WP path>] [-v|--version] [-h|--help] example.com\n' "$0"
 print_help() {
@@ -192,7 +200,7 @@ EXC_PATH[0]='*.log'
 EXC_PATH[1]=${exclude_base_path}/.git
 EXC_PATH[2]=${exclude_base_path}/wp-content/cache
 # need more? - just use the above format
-# EXC_PATH[3]=${exclude_base_path}/wp-content/uploads
+EXC_PATH[3]=${exclude_base_path}/wp-content/uploads
 
 EXCLUDES=''
 for i in "${!EXC_PATH[@]}" ; do
@@ -200,6 +208,14 @@ for i in "${!EXC_PATH[@]}" ; do
     EXCLUDES=${EXCLUDES}'--exclude='$CURRENT_EXC_PATH' '
     # remember the trailing space; we'll use it later
 done
+
+if [ "$debug" ]; then
+    echo "exclude_base_path: $exclude_base_path"
+    printf "EXC_PATH: %s\n" "${EXC_PATH[@]}"
+    echo "EXCLUDES: $EXCLUDES"
+
+    # exit
+fi
 
 #------------- from db-script.sh --------------#
 #------------- end of snippet from db-script.sh --------------#
@@ -213,11 +229,11 @@ if [ "$PASSPHRASE" ]; then
     # using symmetric encryption
     # option --batch to avoid passphrase prompt
     # encrypting database dump
-    tar hcz -C "${SITES_PATH}" "${EXCLUDES}" "${dir_to_backup}" | gpg --symmetric --passphrase "$PASSPHRASE" --batch -o "$FULL_BACKUP_FILE_NAME"
+    tar hcz -C "${SITES_PATH}" ${EXCLUDES} "${dir_to_backup}" | gpg --symmetric --passphrase "$PASSPHRASE" --batch -o "$FULL_BACKUP_FILE_NAME"
 else
     echo "[Warn] No passphrase provided for encryption!"
     echo "[Warn] If you are from Europe, please check GDPR compliance."
-    tar hczf "${FULL_BACKUP_FILE_NAME}" "${EXCLUDES}" -C "${SITES_PATH}" "${dir_to_backup}" > /dev/null
+    tar hczf "${FULL_BACKUP_FILE_NAME}" ${EXCLUDES} -C "${SITES_PATH}" "${dir_to_backup}" > /dev/null
 fi
 if [ "$?" != "0" ]; then
     msg="$script_name - [Warn] Something went wrong while taking a local backup."
