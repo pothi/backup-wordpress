@@ -1,3 +1,8 @@
+version: 6.1.2
+    - date: 2023-05-22
+    - exclude zip and gz along with log files in full / files backups.
+    - improve docs
+
 version: 6.1.1
     - date: 2023-02-21
     - fix a major bug while taking files backup.

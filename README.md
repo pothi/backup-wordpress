@@ -17,9 +17,8 @@ There are plenty of plugins available to take backups within WordPress. However,
 - Support for simple encryption using GnuPG
 - Alert via email when the offsite backup fails (and succeeds)
 
-## Roadmap
+## Wishlist
 
-- Ability to choose the compression method.
 - take only local backups or only remote backups or both.
 - ability to remove local backups when taking only remote backups.
 - single script to take all sorts of backups.
@@ -32,7 +31,7 @@ There are plenty of plugins available to take backups within WordPress. However,
 - aws-cli and/or gsutil (optional, to take offline backups)
 - SSH access
 - mysqldump
-- zip, tar, or bzip
+- tar
 - enough disk space to hold local backups
 - [gpg](https://www.gnupg.org/index.html) for encrypted backups (optional, but helps to comply with GDPR).
 
@@ -47,9 +46,10 @@ There are plenty of plugins available to take backups within WordPress. However,
 - local backups are stored in the directory named `~/backups/`. If it doesn't exist, the script/s would attempt to create it before execution.
 - offline backups can be stored in AWS (for now). Support for other storage engines (especially for GCP) is coming soon!
 
-## How to take backups?
+## Usage
 
-- firstly, go through each script and fill-in the variables to fit your particular environment. Currently, it is assumed that the WordPress core is available at `~/sites/example.com/public`.
+- You may configure most things on the command line since version 6.0.0. For usage, just run the script without arguments.
+- If you use older version of the script (older than 6.0.00, firstly, go through each script and fill-in the variables to fit your particular environment. Currently, it is assumed that the WordPress core is available at `~/sites/example.com/public`.
 - please adjust the number of days to keep the backup, depending on the remaining hard disk space in your server.
 - test the scripts using SSH before implementing it in system cron.
 - note: you may take backups of multiple domains like the following...

@@ -3,7 +3,7 @@
 # requirements
 # ~/log, ~/backups, ~/path/to/example.com/public
 
-version=6.1.1
+version=6.1.2
 
 # this script is basically
 #   files-backup-without-uploads.sh script + part of db-backup.sh script
@@ -200,10 +200,12 @@ exclude_base_path=${DOMAIN}/${PUBLIC_DIR}
 
 declare -a EXC_PATH
 EXC_PATH[0]='*.log'
-EXC_PATH[1]=${exclude_base_path}/.git
-EXC_PATH[2]=${exclude_base_path}/wp-content/cache
+EXC_PATH[1]='*.gz'
+EXC_PATH[2]='*.zip'
+EXC_PATH[3]=${exclude_base_path}/.git
+EXC_PATH[4]=${exclude_base_path}/wp-content/cache
 # need more? - just use the above format
-# EXC_PATH[3]=${exclude_base_path}/wp-content/uploads
+# EXC_PATH[5]=${exclude_base_path}/wp-content/uploads
 
 EXCLUDES=''
 for i in "${!EXC_PATH[@]}" ; do
