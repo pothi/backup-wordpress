@@ -1,3 +1,7 @@
+version: 6.2.0
+    - date: 2023-07-05
+    - display the size of the backup in the console output
+
 version: 6.1.2
     - date: 2023-05-22
     - exclude zip and gz along with log files in full / files backups.

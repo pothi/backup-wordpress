@@ -3,7 +3,7 @@
 # requirements
 # ~/log, ~/backups, ~/path/to/example.com/public
 
-version=6.1.1
+version=6.2.0
 
 ### Variables - Please do not add trailing slash in the PATHs
 
@@ -42,6 +42,8 @@ custom_wp_path=
 BUCKET_NAME=
 DOMAIN=
 PUBLIC_DIR=public
+size=
+sizeH=
 
 # get environment variables, if exists
 # .envrc is in the following format
@@ -206,7 +208,9 @@ else
     wp --path="${WP_PATH}" db export --no-tablespaces=true --add-drop-table - | gzip > "$DB_OUTPUT_FILE_NAME"
 fi
 if [ "$?" = "0" ]; then
-    printf "\nBackup is successfully taken locally.\n\n"
+    printf "\nBackup is successfully taken locally."
+    size=$(du $DB_OUTPUT_FILE_NAME | awk '{print $1}')
+    sizeH=$(du -h $DB_OUTPUT_FILE_NAME | awk '{print $1}')
 else
     msg="$script_name - [Error] Something went wrong while taking local DB backup!"
     printf "\n%s\n\n" "$msg"
@@ -237,6 +241,7 @@ find -L "$BACKUP_PATH" -type f -mtime +$AUTODELETEAFTER -exec rm {} \;
 
 echo "Database backup is done; please check the latest backup in '${BACKUP_PATH}'."
 echo "Latest backup is at ${DB_OUTPUT_FILE_NAME}"
+echo "Backup size: $size($sizeH)."
 
 printf "Script ended on...%s\n\n" "$(date +%c)"
 

@@ -4,7 +4,7 @@
 # no DB backup
 # Excludes contain uploads folder.
 
-version=6.1.2
+version=6.2.0
 
 ### Variables ###
 
@@ -43,6 +43,8 @@ custom_wp_path=
 BUCKET_NAME=
 DOMAIN=
 PUBLIC_DIR=public
+size=
+sizeH=
 
 # get environment variables, if exists
 # .envrc is in the following format
@@ -242,6 +244,8 @@ if [ "$?" != "0" ]; then
     # exit 1
 else
     printf "\nBackup is successfully taken locally.\n\n"
+    size=$(du $FULL_BACKUP_FILE_NAME | awk '{print $1}')
+    sizeH=$(du -h $FULL_BACKUP_FILE_NAME | awk '{print $1}')
 fi
 
 # Remove the old link to latest backup and update it to the current backup file.
@@ -271,5 +275,6 @@ find -L "$BACKUP_PATH" -type f -mtime +$AUTODELETEAFTER -exec rm {} \;
 
 echo "Files backup (except uploads) is done; please check the latest backup in '${BACKUP_PATH}'."
 echo "Latest backup is at ${FULL_BACKUP_FILE_NAME}"
+echo "Backup size: $size($sizeH)."
 
 printf "Script ended on...%s\n\n" "$(date +%c)"
