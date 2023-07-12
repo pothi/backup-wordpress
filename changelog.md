@@ -1,3 +1,7 @@
+version: 6.2.1
+    - date: 2023-07-12
+    - check for log directory earlier.
+
 version: 6.2.0
     - date: 2023-07-05
     - display the size of the backup in the console output

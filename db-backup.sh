@@ -3,7 +3,7 @@
 # requirements
 # ~/log, ~/backups, ~/path/to/example.com/public
 
-version=6.2.0
+version=6.2.1
 
 ### Variables - Please do not add trailing slash in the PATHs
 
@@ -28,6 +28,15 @@ debug=
 #-------- Do NOT Edit Below This Line --------#
 
 [ "$debug" ] && set -x
+
+# attempt to create log directory if it doesn't exist
+if [ ! -d "${HOME}/log" ]; then
+    if ! mkdir -p "${HOME}"/log; then
+        echo "Log directory not found at ~/log. This script can't create it, either!"
+        echo 'You may create it manually and re-run this script.'
+        exit 1
+    fi
+fi
 
 log_file=${HOME}/log/backups.log
 exec > >(tee -a "${log_file}")
@@ -134,14 +143,6 @@ fi
 # to capture non-zero exit code in the pipeline
 set -o pipefail
 
-# attempt to create log directory if it doesn't exist
-if [ ! -d "${HOME}/log" ]; then
-    if ! mkdir -p "${HOME}"/log; then
-        echo "Log directory not found at ~/log. This script can't create it, either!"
-        echo 'You may create it manually and re-run this script.'
-        exit 1
-    fi
-fi
 # attempt to create the backups directory, if it doesn't exist
 if [ ! -d "$BACKUP_PATH" ]; then
     if ! mkdir -p "$BACKUP_PATH"; then
