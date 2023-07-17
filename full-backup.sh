@@ -3,7 +3,7 @@
 # requirements
 # ~/log, ~/backups, ~/path/to/example.com/public
 
-version=6.2.1
+version=6.2.2
 
 # this script is basically
 #   files-backup-without-uploads.sh script + part of db-backup.sh script
@@ -278,9 +278,9 @@ if [ "$BUCKET_NAME" != "" ]; then
     cmd="aws s3 cp ${FULL_BACKUP_FILE_NAME} s3://$BUCKET_NAME/${DOMAIN}/full-backups/ --only-show-errors"
 
     if $cmd; then
-        msg="$script_name - Offsite backup successful. Backup size: $size($sizeH)"
+        msg="Offsite backup successful. Backup size: $size($sizeH)"
         printf "\n%s\n\n" "$msg"
-        [ "$success_alert" ] && echo "$msg" | mail -s 'Offsite Backup Info' "$alertEmail"
+        [ "$success_alert" ] && echo "$script_name - $msg" | mail -s 'Offsite Backup Info' "$alertEmail"
     else
         msg="$script_name - [Error] Something went wrong while taking offsite backup."
         printf "\n%s\n\n" "$msg"

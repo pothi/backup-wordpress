@@ -3,7 +3,7 @@
 # requirements
 # ~/log, ~/backups, ~/path/to/example.com/public
 
-version=6.2.1
+version=6.2.2
 
 ### Variables - Please do not add trailing slash in the PATHs
 
@@ -227,9 +227,9 @@ ln -s "$DB_OUTPUT_FILE_NAME" "$DB_LATEST_FILE_NAME"
 if [ "$BUCKET_NAME" ]; then
     cmd="aws s3 cp $DB_OUTPUT_FILE_NAME s3://$BUCKET_NAME/${DOMAIN_FULL_PATH}/db-backups/ --only-show-errors"
     if $cmd; then
-        msg="$script_name - Offsite backup successful."
+        msg="Offsite backup successful."
         printf "\n%s\n\n" "$msg"
-        [ "$success_alert" ] && echo "$msg" | mail -s 'Offsite Backup Info' "$alertEmail"
+        [ "$success_alert" ] && echo "$script_name - $msg" | mail -s 'Offsite Backup Info' "$alertEmail"
     else
         msg="$script_name - [Error] Something went wrong while taking offsite backup."
         printf "\n%s\n\n" "$msg"

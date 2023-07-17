@@ -1,3 +1,7 @@
+version: 6.2.2
+    - date: 2023-07-17
+    - better user output.
+
 version: 6.2.1
     - date: 2023-07-12
     - check for log directory earlier.

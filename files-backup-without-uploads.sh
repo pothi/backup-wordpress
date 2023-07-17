@@ -4,7 +4,7 @@
 # no DB backup
 # Excludes contain uploads folder.
 
-version=6.2.1
+version=6.2.2
 
 ### Variables ###
 
@@ -261,9 +261,9 @@ if [ "$BUCKET_NAME" != "" ]; then
     cmd="aws s3 cp ${FULL_BACKUP_FILE_NAME} s3://$BUCKET_NAME/${DOMAIN}/full-backups/ --only-show-errors"
 
     if $cmd; then
-        msg="$script_name - Offsite backup successful."
+        msg="Offsite backup successful."
         printf "\n%s\n\n" "$msg"
-        [ "$success_alert" ] && echo "$msg" | mail -s 'Offsite Backup Info' "$alertEmail"
+        [ "$success_alert" ] && echo "$script_name - $msg" | mail -s 'Offsite Backup Info' "$alertEmail"
     else
         msg="$script_name - [Error] Something went wrong while taking offsite backup."
         printf "\n%s\n\n" "$msg"
