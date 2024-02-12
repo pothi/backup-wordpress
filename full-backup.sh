@@ -3,7 +3,7 @@
 # requirements
 # ~/log, ~/backups, ~/path/to/example.com/public
 
-version=6.2.2
+version=6.2.3
 
 # this script is basically
 #   files-backup-without-uploads.sh script + part of db-backup.sh script
@@ -239,25 +239,25 @@ if ! wp --path="${WP_PATH}" db export --no-tablespaces=true --add-drop-table "$d
 fi
 #------------- end of snippet from db-script.sh --------------#
 
-FULL_BACKUP_FILE_NAME=${BACKUP_PATH}/${DOMAIN}-$timestamp.tar.gz
-LATEST_FULL_BACKUP_FILE_NAME=${BACKUP_PATH}/${DOMAIN}-latest.tar.gz
+BACKUP_NAME=${BACKUP_PATH}/${DOMAIN}-$timestamp.tar.gz
+LATEST_BACKUP=${BACKUP_PATH}/${DOMAIN}-latest.tar.gz
 
 if [ "$PASSPHRASE" ]; then
-    FULL_BACKUP_FILE_NAME=${FULL_BACKUP_FILE_NAME}.gpg
-    LATEST_FULL_BACKUP_FILE_NAME=${LATEST_FULL_BACKUP_FILE_NAME}.gpg
+    BACKUP_NAME=${BACKUP_NAME}.gpg
+    LATEST_BACKUP=${LATEST_BACKUP}.gpg
     # using symmetric encryption
     # option --batch to avoid passphrase prompt
-    tar hcz -C "${SITES_PATH}" ${EXCLUDES} "${dir_to_backup}" | gpg --symmetric --passphrase "$PASSPHRASE" --batch -o "$FULL_BACKUP_FILE_NAME"
+    tar hcz -C "${SITES_PATH}" ${EXCLUDES} "${dir_to_backup}" | gpg --symmetric --passphrase "$PASSPHRASE" --batch -o "$BACKUP_NAME"
 else
     echo "[Warn] No passphrase provided for encryption!"
     echo "[Warn] If you are from Europe, please check GDPR compliance."
-    # tar hczf ${FULL_BACKUP_FILE_NAME} --warning=no-file-changed ${EXCLUDES} -C ${SITES_PATH} ${dir_to_backup} > /dev/null
-    tar hczf "${FULL_BACKUP_FILE_NAME}" ${EXCLUDES} -C "${SITES_PATH}" "${dir_to_backup}" > /dev/null
+    # tar hczf ${BACKUP_NAME} --warning=no-file-changed ${EXCLUDES} -C ${SITES_PATH} ${dir_to_backup} > /dev/null
+    tar hczf "${BACKUP_NAME}" ${EXCLUDES} -C "${SITES_PATH}" "${dir_to_backup}" > /dev/null
 fi
 if [ "$?" = "0" ]; then
     printf "\nBackup is successfully taken locally.\n\n"
-    size=$(du $FULL_BACKUP_FILE_NAME | awk '{print $1}')
-    sizeH=$(du -h $FULL_BACKUP_FILE_NAME | awk '{print $1}')
+    size=$(du $BACKUP_NAME | awk '{print $1}')
+    sizeH=$(du -h $BACKUP_NAME | awk '{print $1}')
 else
     msg="$script_name - [Warn] Something went wrong while taking local backup."
     printf "\n%s\n\n" "$msg"
@@ -267,15 +267,15 @@ else
 fi
 
 # Remove the old link to latest backup and update it to the current backup file.
-[ -L "$LATEST_FULL_BACKUP_FILE_NAME" ] && rm "$LATEST_FULL_BACKUP_FILE_NAME"
-ln -s "${FULL_BACKUP_FILE_NAME}" "$LATEST_FULL_BACKUP_FILE_NAME"
+[ -L "$LATEST_BACKUP" ] && rm "$LATEST_BACKUP"
+ln -s "${BACKUP_NAME}" "$LATEST_BACKUP"
 
 # remove the temporary DB dump
 [ -f "$db_dump" ] && rm "$db_dump"
 
 # send backup to AWS S3 bucket
 if [ "$BUCKET_NAME" != "" ]; then
-    cmd="aws s3 cp ${FULL_BACKUP_FILE_NAME} s3://$BUCKET_NAME/${DOMAIN}/full-backups/ --only-show-errors"
+    cmd="aws s3 cp ${BACKUP_NAME} s3://$BUCKET_NAME/${DOMAIN}/full-backups/ --only-show-errors"
 
     if $cmd; then
         msg="Offsite backup successful. Backup size: $size($sizeH)"
@@ -292,7 +292,7 @@ fi
 find -L "$BACKUP_PATH" -type f -mtime +$AUTODELETEAFTER -exec rm {} \;
 
 echo "Full backup is done; please check the latest backup in '${BACKUP_PATH}'."
-echo "Latest backup is at ${FULL_BACKUP_FILE_NAME}"
+echo "Latest backup is at ${BACKUP_NAME}"
 echo "Backup size: $size($sizeH)."
 
 printf "Script ended on...%s\n\n" "$(date +%c)"

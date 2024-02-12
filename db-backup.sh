@@ -3,7 +3,7 @@
 # requirements
 # ~/log, ~/backups, ~/path/to/example.com/public
 
-version=6.2.2
+version=6.2.3
 
 ### Variables - Please do not add trailing slash in the PATHs
 
@@ -185,7 +185,7 @@ fi
 
 if [ "$custom_wp_path" ]; then
     WP_PATH="$custom_wp_path"
-    DB_OUTPUT_FILE_NAME=${custom_wp_path}/db.sql
+    BACKUP_NAME=${custom_wp_path}/db.sql
 fi
 
 [ -d "$WP_PATH" ] || { echo >&2 "WordPress is not found at ${WP_PATH}"; exit 1; }
@@ -196,36 +196,36 @@ echo "'$script_name' started on... $(date +%c)"
 # ex: example.com/test would become example.com-test
 DOMAIN_FULL_PATH=$(echo "$DOMAIN" | awk '{gsub(/\//,"-")}; 1')
 
-DB_OUTPUT_FILE_NAME=${BACKUP_PATH}/${DOMAIN_FULL_PATH}-${timestamp}.sql.gz
-DB_LATEST_FILE_NAME=${BACKUP_PATH}/${DOMAIN_FULL_PATH}-latest.sql.gz
+BACKUP_NAME=${BACKUP_PATH}/${DOMAIN_FULL_PATH}-${timestamp}.sql.gz
+LATEST_BACKUP=${BACKUP_PATH}/${DOMAIN_FULL_PATH}-latest.sql.gz
 
 # take actual DB backup
 # 2>/dev/null to suppress any warnings / errors
 wp --path="${WP_PATH}" transient delete --all 2>/dev/null
 if [ -n "$PASSPHRASE" ] ; then
-    DB_OUTPUT_FILE_NAME="${DB_OUTPUT_FILE_NAME}".gpg
-    wp --path="${WP_PATH}" db export --no-tablespaces=true --add-drop-table - | gzip | gpg --symmetric --passphrase "$PASSPHRASE" --batch -o "$DB_OUTPUT_FILE_NAME"
+    BACKUP_NAME="${BACKUP_NAME}".gpg
+    wp --path="${WP_PATH}" db export --no-tablespaces=true --add-drop-table - | gzip | gpg --symmetric --passphrase "$PASSPHRASE" --batch -o "$BACKUP_NAME"
 else
-    wp --path="${WP_PATH}" db export --no-tablespaces=true --add-drop-table - | gzip > "$DB_OUTPUT_FILE_NAME"
+    wp --path="${WP_PATH}" db export --no-tablespaces=true --add-drop-table - | gzip > "$BACKUP_NAME"
 fi
 if [ "$?" = "0" ]; then
     printf "\nBackup is successfully taken locally."
-    size=$(du $DB_OUTPUT_FILE_NAME | awk '{print $1}')
-    sizeH=$(du -h $DB_OUTPUT_FILE_NAME | awk '{print $1}')
+    size=$(du $BACKUP_NAME | awk '{print $1}')
+    sizeH=$(du -h $BACKUP_NAME | awk '{print $1}')
 else
     msg="$script_name - [Error] Something went wrong while taking local DB backup!"
     printf "\n%s\n\n" "$msg"
     echo "$msg" | mail -s 'DB Backup Failure' "$alertEmail"
-    [ -f "$DB_OUTPUT_FILE_NAME" ] && rm -f "$DB_OUTPUT_FILE_NAME"
+    [ -f "$BACKUP_NAME" ] && rm -f "$BACKUP_NAME"
     exit 1
 fi
 
-[ -L "$DB_LATEST_FILE_NAME" ] && rm "$DB_LATEST_FILE_NAME"
-ln -s "$DB_OUTPUT_FILE_NAME" "$DB_LATEST_FILE_NAME"
+[ -L "$LATEST_BACKUP" ] && rm "$LATEST_BACKUP"
+ln -s "$BACKUP_NAME" "$LATEST_BACKUP"
 
 # send the backup offsite
 if [ "$BUCKET_NAME" ]; then
-    cmd="aws s3 cp $DB_OUTPUT_FILE_NAME s3://$BUCKET_NAME/${DOMAIN_FULL_PATH}/db-backups/ --only-show-errors"
+    cmd="aws s3 cp $BACKUP_NAME s3://$BUCKET_NAME/${DOMAIN_FULL_PATH}/db-backups/ --only-show-errors"
     if $cmd; then
         msg="Offsite backup successful."
         printf "\n%s\n\n" "$msg"
@@ -241,7 +241,7 @@ fi
 find -L "$BACKUP_PATH" -type f -mtime +$AUTODELETEAFTER -exec rm {} \;
 
 echo "Database backup is done; please check the latest backup in '${BACKUP_PATH}'."
-echo "Latest backup is at ${DB_OUTPUT_FILE_NAME}"
+echo "Latest backup is at ${BACKUP_NAME}"
 echo "Backup size: $size($sizeH)."
 
 printf "Script ended on...%s\n\n" "$(date +%c)"
