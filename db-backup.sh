@@ -3,7 +3,7 @@
 # requirements
 # ~/log, ~/backups, ~/path/to/example.com/public
 
-version=6.2.3
+version=6.2.4
 
 ### Variables - Please do not add trailing slash in the PATHs
 
@@ -168,6 +168,14 @@ command -v mail >/dev/null || echo >&2 "[Warn]: 'mail' command is not found in \
 alertEmail=${custom_email:-${BACKUP_ADMIN_EMAIL:-${ADMIN_EMAIL:-"root@localhost"}}}
 
 # Define paths
+
+# convert forward slash found in sub-directories to hyphen
+# ex: example.com/test would become example.com-test
+DOMAIN_FULL_PATH=$(echo "$DOMAIN" | awk '{gsub(/\//,"-")}; 1')
+
+BACKUP_NAME=${BACKUP_PATH}/${DOMAIN_FULL_PATH}-db-${timestamp}.sql.gz
+LATEST_BACKUP=${BACKUP_PATH}/${DOMAIN_FULL_PATH}-latest.sql.gz
+
 # cPanel uses a different directory structure
 # dir_to_backup and db_dump are used only in full-backup.sh
 cPanel=$(/usr/local/cpanel/cpanel -V 2>/dev/null)
@@ -185,19 +193,12 @@ fi
 
 if [ "$custom_wp_path" ]; then
     WP_PATH="$custom_wp_path"
-    BACKUP_NAME=${custom_wp_path}/db.sql
+    BACKUP_NAME=${custom_wp_path}/db.sql.gz
 fi
 
 [ -d "$WP_PATH" ] || { echo >&2 "WordPress is not found at ${WP_PATH}"; exit 1; }
 
 echo "'$script_name' started on... $(date +%c)"
-
-# convert forward slash found in sub-directories to hyphen
-# ex: example.com/test would become example.com-test
-DOMAIN_FULL_PATH=$(echo "$DOMAIN" | awk '{gsub(/\//,"-")}; 1')
-
-BACKUP_NAME=${BACKUP_PATH}/${DOMAIN_FULL_PATH}-${timestamp}.sql.gz
-LATEST_BACKUP=${BACKUP_PATH}/${DOMAIN_FULL_PATH}-latest.sql.gz
 
 # take actual DB backup
 # 2>/dev/null to suppress any warnings / errors

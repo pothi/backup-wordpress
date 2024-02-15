@@ -1,3 +1,8 @@
+version: 6.2.4
+    - date: 2024-02-15
+    - streamline file names
+    - DB: define correct path for backup file.
+
 version: 6.2.3
     - date: 2024-02-12
     - streamline file names

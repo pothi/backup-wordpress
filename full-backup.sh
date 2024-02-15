@@ -3,7 +3,7 @@
 # requirements
 # ~/log, ~/backups, ~/path/to/example.com/public
 
-version=6.2.3
+version=6.2.4
 
 # this script is basically
 #   files-backup-without-uploads.sh script + part of db-backup.sh script
@@ -239,7 +239,7 @@ if ! wp --path="${WP_PATH}" db export --no-tablespaces=true --add-drop-table "$d
 fi
 #------------- end of snippet from db-script.sh --------------#
 
-BACKUP_NAME=${BACKUP_PATH}/${DOMAIN}-$timestamp.tar.gz
+BACKUP_NAME=${BACKUP_PATH}/${DOMAIN}-full-$timestamp.tar.gz
 LATEST_BACKUP=${BACKUP_PATH}/${DOMAIN}-latest.tar.gz
 
 if [ "$PASSPHRASE" ]; then
