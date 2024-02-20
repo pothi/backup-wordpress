@@ -1,3 +1,7 @@
+version: 6.3
+    - date: 2024-02-20
+    - exclude WordFence logs folder from backup
+
 version: 6.2.4
     - date: 2024-02-15
     - streamline file names
