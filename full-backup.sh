@@ -3,7 +3,7 @@
 # requirements
 # ~/log, ~/backups, ~/path/to/example.com/public
 
-version=6.3.1
+version=6.3.2
 
 # this script is basically
 #   files-backup-without-uploads.sh script + part of db-backup.sh script
@@ -257,8 +257,6 @@ else
 fi
 if [ "$?" = "0" ]; then
     printf "\nBackup is successfully taken locally.\n\n"
-    size=$(du $BACKUP_NAME | awk '{print $1}')
-    sizeH=$(du -h $BACKUP_NAME | awk '{print $1}')
 else
     msg="$script_name - [Warn] Something went wrong while taking local backup."
     printf "\n%s\n\n" "$msg"
@@ -266,6 +264,9 @@ else
     # Do not exit as tar exists with error code 1 even under certain warnings
     # exit 1
 fi
+
+size=$(du $BACKUP_NAME | awk '{print $1}')
+sizeH=$(du -h $BACKUP_NAME | awk '{print $1}')
 
 # Remove the old link to latest backup and update it to the current backup file.
 [ -L "$LATEST_BACKUP" ] && rm "$LATEST_BACKUP"

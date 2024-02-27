@@ -3,7 +3,7 @@
 # requirements
 # ~/log, ~/backups, ~/path/to/example.com/public
 
-version=6.3.1
+version=6.3.2
 
 ### Variables - Please do not add trailing slash in the PATHs
 
@@ -211,8 +211,6 @@ else
 fi
 if [ "$?" = "0" ]; then
     printf "\nBackup is successfully taken locally."
-    size=$(du $BACKUP_NAME | awk '{print $1}')
-    sizeH=$(du -h $BACKUP_NAME | awk '{print $1}')
 else
     msg="$script_name - [Error] Something went wrong while taking local DB backup!"
     printf "\n%s\n\n" "$msg"
@@ -220,6 +218,9 @@ else
     [ -f "$BACKUP_NAME" ] && rm -f "$BACKUP_NAME"
     exit 1
 fi
+
+size=$(du $BACKUP_NAME | awk '{print $1}')
+sizeH=$(du -h $BACKUP_NAME | awk '{print $1}')
 
 [ -L "$LATEST_BACKUP" ] && rm "$LATEST_BACKUP"
 ln -s "$BACKUP_NAME" "$LATEST_BACKUP"

@@ -4,7 +4,7 @@
 # no DB backup
 # Excludes contain uploads folder.
 
-version=6.3.1
+version=6.3.2
 
 ### Variables ###
 
@@ -246,9 +246,10 @@ if [ "$?" != "0" ]; then
     # exit 1
 else
     printf "\nBackup is successfully taken locally.\n\n"
-    size=$(du $BACKUP_NAME | awk '{print $1}')
-    sizeH=$(du -h $BACKUP_NAME | awk '{print $1}')
 fi
+
+size=$(du $BACKUP_NAME | awk '{print $1}')
+sizeH=$(du -h $BACKUP_NAME | awk '{print $1}')
 
 # Remove the old link to latest backup and update it to the current backup file.
 [ -L "$LATEST_BACKUP" ] && rm "$LATEST_BACKUP"

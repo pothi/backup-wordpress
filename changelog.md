@@ -1,3 +1,7 @@
+version: 6.3.2
+    - date: 2024-02-27
+    - Calculate the size of the backup, even on failure.
+
 version: 6.3.1
     - date: 2024-02-27
     - fix inconsistency in file names
