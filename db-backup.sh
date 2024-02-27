@@ -3,7 +3,7 @@
 # requirements
 # ~/log, ~/backups, ~/path/to/example.com/public
 
-version=6.3
+version=6.3.1
 
 ### Variables - Please do not add trailing slash in the PATHs
 
@@ -174,7 +174,7 @@ alertEmail=${custom_email:-${BACKUP_ADMIN_EMAIL:-${ADMIN_EMAIL:-"root@localhost"
 DOMAIN_FULL_PATH=$(echo "$DOMAIN" | awk '{gsub(/\//,"-")}; 1')
 
 BACKUP_NAME=${BACKUP_PATH}/${DOMAIN_FULL_PATH}-db-${timestamp}.sql.gz
-LATEST_BACKUP=${BACKUP_PATH}/${DOMAIN_FULL_PATH}-latest.sql.gz
+LATEST_BACKUP=${BACKUP_PATH}/${DOMAIN_FULL_PATH}-db-latest.sql.gz
 
 # cPanel uses a different directory structure
 # dir_to_backup and db_dump are used only in full-backup.sh

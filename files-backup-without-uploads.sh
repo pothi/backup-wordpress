@@ -4,7 +4,7 @@
 # no DB backup
 # Excludes contain uploads folder.
 
-version=6.3
+version=6.3.1
 
 ### Variables ###
 
@@ -224,7 +224,7 @@ if [ "$debug" ]; then
 fi
 
 BACKUP_NAME=${BACKUP_PATH}/${DOMAIN}-no_uploads-$timestamp.tar.gz
-LATEST_BACKUP=${BACKUP_PATH}/${DOMAIN}-no_uploads.latest.tar.gz
+LATEST_BACKUP=${BACKUP_PATH}/${DOMAIN}-no_uploads-latest.tar.gz
 
 if [ "$PASSPHRASE" ]; then
     BACKUP_NAME=${BACKUP_NAME}.gpg

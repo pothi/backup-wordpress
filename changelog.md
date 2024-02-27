@@ -1,3 +1,7 @@
+version: 6.3.1
+    - date: 2024-02-27
+    - fix inconsistency in file names
+
 version: 6.3
     - date: 2024-02-20
     - exclude WordFence logs folder from backup
