@@ -1,3 +1,7 @@
+version: 6.3.3
+    - date: 2024-05-03
+    - Exclude wp-content/litespeed from backups.
+
 version: 6.3.2
     - date: 2024-02-27
     - Calculate the size of the backup, even on failure.

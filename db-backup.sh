@@ -3,7 +3,7 @@
 # requirements
 # ~/log, ~/backups, ~/path/to/example.com/public
 
-version=6.3.2
+version=6.3.3
 
 ### Variables - Please do not add trailing slash in the PATHs
 

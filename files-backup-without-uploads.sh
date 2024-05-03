@@ -4,7 +4,7 @@
 # no DB backup
 # Excludes contain uploads folder.
 
-version=6.3.2
+version=6.3.3
 
 ### Variables ###
 
