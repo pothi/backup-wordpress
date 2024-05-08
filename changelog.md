@@ -1,3 +1,7 @@
+version: 6.3.4
+    - date: 2024-05-08
+    - Fix backup folder name for files backups without uploads folder.
+
 version: 6.3.3
     - date: 2024-05-03
     - Exclude wp-content/litespeed from backups.

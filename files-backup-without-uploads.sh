@@ -4,7 +4,7 @@
 # no DB backup
 # Excludes contain uploads folder.
 
-version=6.3.3
+version=6.3.4
 
 ### Variables ###
 
@@ -260,7 +260,7 @@ ln -s "${BACKUP_NAME}" "$LATEST_BACKUP"
 
 # send backup to AWS S3 bucket
 if [ "$BUCKET_NAME" != "" ]; then
-    cmd="aws s3 cp ${BACKUP_NAME} s3://$BUCKET_NAME/${DOMAIN}/full-backups/ --only-show-errors"
+    cmd="aws s3 cp ${BACKUP_NAME} s3://$BUCKET_NAME/${DOMAIN}/files-backups-without-uploads/ --only-show-errors"
 
     if $cmd; then
         msg="Offsite backup successful."
