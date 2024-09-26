@@ -1,3 +1,7 @@
+version: 6.3.5
+    - date: 2024-09-26
+    - Exclude sql files
+
 version: 6.3.4
     - date: 2024-05-08
     - Fix backup folder name for files backups without uploads folder.

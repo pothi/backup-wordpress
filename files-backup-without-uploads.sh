@@ -4,7 +4,7 @@
 # no DB backup
 # Excludes contain uploads folder.
 
-version=6.3.4
+version=6.3.5
 
 ### Variables ###
 
@@ -205,8 +205,9 @@ EXC_PATH[2]='*.zip'
 EXC_PATH[3]=${exclude_base_path}/.git
 EXC_PATH[4]=${exclude_base_path}/wp-content/cache
 EXC_PATH[5]=${exclude_base_path}/wp-content/wflogs
+EXC_PATH[6]='*.sql'
+EXC_PATH[7]=${exclude_base_path}/wp-content/uploads
 # need more? - just use the above format
-EXC_PATH[6]=${exclude_base_path}/wp-content/uploads
 
 EXCLUDES=''
 for i in "${!EXC_PATH[@]}" ; do
