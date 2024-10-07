@@ -1,3 +1,8 @@
+version: 6.4.0
+    - date: 2024-10-07
+    - simplify checking for executables.
+    - separate log file for each backup file type.
+
 version: 6.3.5
     - date: 2024-09-26
     - Exclude sql files
