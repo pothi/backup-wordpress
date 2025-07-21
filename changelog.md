@@ -1,3 +1,7 @@
+version: 6.5.0
+    - date: 2025-07-21
+    - include crontab in the backup.
+
 version: 6.4.0
     - date: 2024-10-07
     - simplify checking for executables.

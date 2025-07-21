@@ -3,7 +3,7 @@
 # requirements
 # ~/log, ~/backups, ~/path/to/example.com/public
 
-version=6.4.0
+version=6.5.0
 
 # this script is basically
 #   files-backup-without-uploads.sh script + part of db-backup.sh script
@@ -241,6 +241,8 @@ if ! wp --path="${WP_PATH}" db export --no-tablespaces=true --add-drop-table "$d
     exit 1
 fi
 #------------- end of snippet from db-script.sh --------------#
+
+crontab -l > $SITES_PATH/$DOMAIN/cron-latest
 
 BACKUP_NAME=${BACKUP_PATH}/${DOMAIN}-full-$timestamp.tar.gz
 LATEST_BACKUP=${BACKUP_PATH}/${DOMAIN}-full-latest.tar.gz

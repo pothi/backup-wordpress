@@ -4,7 +4,7 @@
 # no DB backup
 # Excludes contain uploads folder.
 
-version=6.4.0
+version=6.5.0
 
 ### Variables ###
 
@@ -223,6 +223,8 @@ if [ "$debug" ]; then
 
     # exit
 fi
+
+crontab -l > $SITES_PATH/$DOMAIN/cron-latest
 
 BACKUP_NAME=${BACKUP_PATH}/${DOMAIN}-no_uploads-$timestamp.tar.gz
 LATEST_BACKUP=${BACKUP_PATH}/${DOMAIN}-no_uploads-latest.tar.gz
