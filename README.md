@@ -1,5 +1,7 @@
-Backup-Wordpress
+Backup Wordpress
 ================
+
+Note: Check out [an improved version](https://github.com/pothi/backup-wp/) of this repo re-written in Fish shell and with multiple improvements over this repo such as nightly/weekly/monthly backups, offsite only backups, etc.
 
 Scripts to backup WordPress via server cron (cPanel, Plesk, etc)
 ----------------------------------------------------------------
