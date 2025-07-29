@@ -10,18 +10,18 @@ version=6.5.0
 
 # auto delete older backups after certain number days
 # configurable using -k|--keepfor <days>
-AUTODELETEAFTER=7
+auto_delete_after=7
 
 # where to store the database backups?
-BACKUP_PATH=${HOME}/backups/files-without-uploads
+backup_path=${HOME}/backups/files-without-uploads
 
 # a passphrase for encryption, in order to being able to use almost any special characters use ""
 # it's best to configure it in ~/.envrc file
-PASSPHRASE=
+passphrase=
 
 # the script assumes your sites are stored like ~/sites/example.com, ~/sites/example.net, ~/sites/example.org and so on.
 # if you have a different pattern, such as ~/app/example.com, please change the following to fit the server environment!
-SITES_PATH=${HOME}/sites
+sites_path=${HOME}/sites
 
 # To debug, use any value for "debug", otherwise please leave it empty
 debug=
@@ -49,9 +49,9 @@ timestamp=$(date +%F_%H-%M-%S)
 success_alert=
 custom_email=
 custom_wp_path=
-BUCKET_NAME=
-DOMAIN=
-PUBLIC_DIR=public
+bucket_name=
+domain=
+public_dir=public
 size=
 sizeH=
 
@@ -97,8 +97,8 @@ if [ "$#" != 0 ]; then
       -v|--version) echo $version; exit 0;;
       -V) echo $version; exit 0;;
       -h|--help) print_help; exit 0;;
-      -b|--bucket) assert_argument "$1" "$opt"; BUCKET_NAME="$1"; shift;;
-      -k|--keepfor) assert_argument "$1" "$opt"; AUTODELETEAFTER="$1"; shift;;
+      -b|--bucket) assert_argument "$1" "$opt"; bucket_name="$1"; shift;;
+      -k|--keepfor) assert_argument "$1" "$opt"; auto_delete_after="$1"; shift;;
       -p|--path) assert_argument "$1" "$opt"; custom_wp_path="$1"; shift;;
       -e|--email) assert_argument "$1" "$opt"; custom_email="$1"; shift;;
       -s|--success) success_alert=1;;
@@ -120,7 +120,7 @@ fi
 
 # Get example.com
 if [ "$#" -gt 0 ]; then
-    DOMAIN=$1
+    domain=$1
     shift
 else
     print_help
@@ -130,7 +130,7 @@ fi
 # compatibility with old syntax to get bucket name
 # To be removed in the future
 if [ "$#" -gt 0 ]; then
-    BUCKET_NAME=$1
+    bucket_name=$1
     echo "You are using old syntax."
     print_help
     shift
@@ -146,9 +146,9 @@ fi
 set -o pipefail
 
 # attempt to create the backups directory, if it doesn't exist
-if [ ! -d "$BACKUP_PATH" ]; then
-    if ! mkdir -p "$BACKUP_PATH"; then
-        echo "BACKUP_PATH is not found at $BACKUP_PATH. This script can't create it, either!"
+if [ ! -d "$backup_path" ]; then
+    if ! mkdir -p "$backup_path"; then
+        echo "backup_path is not found at $backup_path. This script can't create it, either!"
         echo 'You may create it manually and re-run this script.'
         exit 1
     fi
@@ -160,7 +160,7 @@ export PATH=~/bin:~/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin
 command -q aws  || { echo >&2 "[Warn]: aws cli is not found in \$PATH. Offsite backups will not be taken!"; }
 command -q mail || echo >&2 "[Warn]: 'mail' command is not found in \$PATH; Email alerts will not be sent!"
 
-((AUTODELETEAFTER--))
+((auto_delete_after--))
 
 # check for the variable/s in three places
 # 1 - hard-coded value
@@ -174,72 +174,72 @@ alertEmail=${custom_email:-${BACKUP_ADMIN_EMAIL:-${ADMIN_EMAIL:-"root@localhost"
 # dir_to_backup and db_dump are used only in full-backup.sh
 cPanel=$(/usr/local/cpanel/cpanel -V 2>/dev/null)
 if [ "$cPanel" ]; then
-    SITES_PATH=$HOME
-    PUBLIC_DIR=public_html
+    sites_path=$HOME
+    public_dir=public_html
     # dir_to_backup=public_html
-    # db_dump=${WP_PATH}/db.sql
-    WP_PATH=${SITES_PATH}/${PUBLIC_DIR}
+    # db_dump=${wp_path}/db.sql
+    wp_path=${sites_path}/${public_dir}
 else
-    dir_to_backup=${DOMAIN}
-    # db_dump=${SITES_PATH}/${DOMAIN}/db.sql
-    WP_PATH=${SITES_PATH}/${DOMAIN}/${PUBLIC_DIR}
+    dir_to_backup=${domain}
+    # db_dump=${sites_path}/${domain}/db.sql
+    wp_path=${sites_path}/${domain}/${public_dir}
 fi
 
 if [ "$custom_wp_path" ]; then
-    WP_PATH="$custom_wp_path"
+    wp_path="$custom_wp_path"
     # db_dump=${custom_wp_path}/db.sql
 fi
 
-[ -d "$WP_PATH" ] || { echo >&2 "WordPress is not found at ${WP_PATH}"; exit 1; }
+[ -d "$wp_path" ] || { echo >&2 "WordPress is not found at ${wp_path}"; exit 1; }
 
 echo "'$script_name' started on... $(date +%c)"
 
 # path to be excluded from the backup
 # no trailing slash, please
-exclude_base_path=${DOMAIN}/${PUBLIC_DIR}
+exclude_base_path=${domain}/${public_dir}
 
-declare -a EXC_PATH
-EXC_PATH[0]='*.log'
-EXC_PATH[1]='*.gz'
-EXC_PATH[2]='*.zip'
-EXC_PATH[3]=${exclude_base_path}/.git
-EXC_PATH[4]=${exclude_base_path}/wp-content/cache
-EXC_PATH[5]=${exclude_base_path}/wp-content/wflogs
-EXC_PATH[6]='*.sql'
-EXC_PATH[7]=${exclude_base_path}/wp-content/uploads
+declare -a exclude_path
+exclude_path[0]='*.log'
+exclude_path[1]='*.gz'
+exclude_path[2]='*.zip'
+exclude_path[3]=${exclude_base_path}/.git
+exclude_path[4]=${exclude_base_path}/wp-content/cache
+exclude_path[5]=${exclude_base_path}/wp-content/wflogs
+exclude_path[6]='*.sql'
+exclude_path[7]=${exclude_base_path}/wp-content/uploads
 # need more? - just use the above format
 
-EXCLUDES=''
-for i in "${!EXC_PATH[@]}" ; do
-    CURRENT_EXC_PATH=${EXC_PATH[$i]}
-    EXCLUDES=${EXCLUDES}'--exclude='$CURRENT_EXC_PATH' '
+excludes=''
+for i in "${!exclude_path[@]}" ; do
+    current_exclude_path=${exclude_path[$i]}
+    excludes=${excludes}'--exclude='$current_exclude_path' '
     # remember the trailing space; we'll use it later
 done
 
 if [ "$debug" ]; then
     echo "exclude_base_path: $exclude_base_path"
-    printf "EXC_PATH: %s\n" "${EXC_PATH[@]}"
-    echo "EXCLUDES: $EXCLUDES"
+    printf "exclude_path: %s\n" "${exclude_path[@]}"
+    echo "excludes: $excludes"
 
     # exit
 fi
 
-crontab -l > $SITES_PATH/$DOMAIN/cron-latest
+crontab -l > $sites_path/$domain/cron-latest
 
-BACKUP_NAME=${BACKUP_PATH}/${DOMAIN}-no_uploads-$timestamp.tar.gz
-LATEST_BACKUP=${BACKUP_PATH}/${DOMAIN}-no_uploads-latest.tar.gz
+backup_name=${backup_path}/${domain}-no_uploads-$timestamp.tar.gz
+latest_backup=${backup_path}/${domain}-no_uploads-latest.tar.gz
 
-if [ "$PASSPHRASE" ]; then
-    BACKUP_NAME=${BACKUP_NAME}.gpg
-    LATEST_BACKUP=${LATEST_BACKUP}.gpg
+if [ "$passphrase" ]; then
+    backup_name=${backup_name}.gpg
+    latest_backup=${latest_backup}.gpg
     # using symmetric encryption
     # option --batch to avoid passphrase prompt
     # encrypting database dump
-    tar hcz -C "${SITES_PATH}" ${EXCLUDES} "${dir_to_backup}" | gpg --symmetric --passphrase "$PASSPHRASE" --batch -o "$BACKUP_NAME"
+    tar hcz -C "${sites_path}" ${excludes} "${dir_to_backup}" | gpg --symmetric --passphrase "$passphrase" --batch -o "$backup_name"
 else
     echo "[Warn] No passphrase provided for encryption!"
     echo "[Warn] If you are from Europe, please check GDPR compliance."
-    tar hczf "${BACKUP_NAME}" ${EXCLUDES} -C "${SITES_PATH}" "${dir_to_backup}" > /dev/null
+    tar hczf "${backup_name}" ${excludes} -C "${sites_path}" "${dir_to_backup}" > /dev/null
 fi
 if [ "$?" != "0" ]; then
     msg="$script_name - [Warn] Something went wrong while taking a local backup."
@@ -251,19 +251,19 @@ else
     printf "\nBackup is successfully taken locally.\n\n"
 fi
 
-size=$(du $BACKUP_NAME | awk '{print $1}')
-sizeH=$(du -h $BACKUP_NAME | awk '{print $1}')
+size=$(du $backup_name | awk '{print $1}')
+sizeH=$(du -h $backup_name | awk '{print $1}')
 
 # Remove the old link to latest backup and update it to the current backup file.
-[ -L "$LATEST_BACKUP" ] && rm "$LATEST_BACKUP"
-ln -s "${BACKUP_NAME}" "$LATEST_BACKUP"
+[ -L "$latest_backup" ] && rm "$latest_backup"
+ln -s "${backup_name}" "$latest_backup"
 
 # remove the temporary DB dump
 # [ -f $db_dump ] && rm $db_dump
 
 # send backup to AWS S3 bucket
-if [ "$BUCKET_NAME" != "" ]; then
-    cmd="aws s3 cp ${BACKUP_NAME} s3://$BUCKET_NAME/${DOMAIN}/files-backups-without-uploads/ --only-show-errors"
+if [ "$bucket_name" != "" ]; then
+    cmd="aws s3 cp ${backup_name} s3://$bucket_name/${domain}/files-backups-without-uploads/ --only-show-errors"
 
     if $cmd; then
         msg="Offsite backup successful."
@@ -277,10 +277,10 @@ if [ "$BUCKET_NAME" != "" ]; then
 fi
 
 # Auto delete backups
-find -L "$BACKUP_PATH" -type f -mtime +$AUTODELETEAFTER -exec rm {} \;
+find -L "$backup_path" -type f -mtime +$auto_delete_after -exec rm {} \;
 
-echo "Files backup (except uploads) is done; please check the latest backup in '${BACKUP_PATH}'."
-echo "Latest backup is at ${BACKUP_NAME}"
+echo "Files backup (except uploads) is done; please check the latest backup in '${backup_path}'."
+echo "Latest backup is at ${backup_name}"
 echo "Backup size: $size($sizeH)."
 
 printf "Script ended on...%s\n\n" "$(date +%c)"

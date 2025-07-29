@@ -9,18 +9,18 @@ version=6.4.0
 
 # auto delete older backups after certain number days
 # configurable using -k|--keepfor <days>
-AUTODELETEAFTER=7
+auto_delete_after=7
 
 # where to store the database backups?
-BACKUP_PATH=${HOME}/backups/db-backups
+backup_path=${HOME}/backups/db-backups
 
 # a passphrase for encryption, in order to being able to use almost any special characters use ""
 # it's best to configure it in ~/.envrc file
-PASSPHRASE=
+passphrase=
 
 # the script assumes your sites are stored like ~/sites/example.com, ~/sites/example.net, ~/sites/example.org and so on.
 # if you have a different pattern, such as ~/app/example.com, please change the following to fit the server environment!
-SITES_PATH=${HOME}/sites
+sites_path=${HOME}/sites
 
 # To debug, use any value for "debug", otherwise please leave it empty
 debug=
@@ -48,9 +48,9 @@ timestamp=$(date +%F_%H-%M-%S)
 success_alert=
 custom_email=
 custom_wp_path=
-BUCKET_NAME=
-DOMAIN=
-PUBLIC_DIR=public
+bucket_name=
+domain=
+public_dir=public
 size=
 sizeH=
 
@@ -95,8 +95,8 @@ if [ "$#" != 0 ]; then
       -v|--version) echo $version; exit 0;;
       -V) echo $version; exit 0;;
       -h|--help) print_help; exit 0;;
-      -b|--bucket) assert_argument "$1" "$opt"; BUCKET_NAME="$1"; shift;;
-      -k|--keepfor) assert_argument "$1" "$opt"; AUTODELETEAFTER="$1"; shift;;
+      -b|--bucket) assert_argument "$1" "$opt"; bucket_name="$1"; shift;;
+      -k|--keepfor) assert_argument "$1" "$opt"; auto_delete_after="$1"; shift;;
       -p|--path) assert_argument "$1" "$opt"; custom_wp_path="$1"; shift;;
       -e|--email) assert_argument "$1" "$opt"; custom_email="$1"; shift;;
       -s|--success) success_alert=1;;
@@ -118,7 +118,7 @@ fi
 
 # Get example.com
 if [ "$#" -gt 0 ]; then
-    DOMAIN=$1
+    domain=$1
     shift
 else
     print_help
@@ -128,7 +128,7 @@ fi
 # compatibility with old syntax to get bucket name
 # To be removed in the future
 if [ "$#" -gt 0 ]; then
-    BUCKET_NAME=$1
+    bucket_name=$1
     echo "You are using old syntax."
     print_help
     shift
@@ -144,9 +144,9 @@ fi
 set -o pipefail
 
 # attempt to create the backups directory, if it doesn't exist
-if [ ! -d "$BACKUP_PATH" ]; then
-    if ! mkdir -p "$BACKUP_PATH"; then
-        echo "BACKUP_PATH is not found at $BACKUP_PATH. This script can't create it, either!"
+if [ ! -d "$backup_path" ]; then
+    if ! mkdir -p "$backup_path"; then
+        echo "backup_path is not found at $backup_path. This script can't create it, either!"
         echo 'You may create it manually and re-run this script.'
         exit 1
     fi
@@ -158,7 +158,7 @@ command -q wp   || { echo >&2 "wp cli is not found in $PATH. Exiting."; exit 1; 
 command -q aws  || { echo >&2 "[Warn]: aws cli is not found in \$PATH. Offsite backups will not be taken!"; }
 command -q mail || echo >&2 "[Warn]: 'mail' command is not found in \$PATH; Email alerts will not be sent!"
 
-((AUTODELETEAFTER--))
+((auto_delete_after--))
 
 # check for the variable/s in three places
 # 1 - hard-coded value
@@ -171,43 +171,43 @@ alertEmail=${custom_email:-${BACKUP_ADMIN_EMAIL:-${ADMIN_EMAIL:-"root@localhost"
 
 # convert forward slash found in sub-directories to hyphen
 # ex: example.com/test would become example.com-test
-DOMAIN_FULL_PATH=$(echo "$DOMAIN" | awk '{gsub(/\//,"-")}; 1')
+domain_full_path=$(echo "$domain" | awk '{gsub(/\//,"-")}; 1')
 
-BACKUP_NAME=${BACKUP_PATH}/${DOMAIN_FULL_PATH}-db-${timestamp}.sql.gz
-LATEST_BACKUP=${BACKUP_PATH}/${DOMAIN_FULL_PATH}-db-latest.sql.gz
+backup_name=${backup_path}/${domain_full_path}-db-${timestamp}.sql.gz
+latest_backup=${backup_path}/${domain_full_path}-db-latest.sql.gz
 
 # cPanel uses a different directory structure
 # dir_to_backup and db_dump are used only in full-backup.sh
 cPanel=$(/usr/local/cpanel/cpanel -V 2>/dev/null)
 if [ "$cPanel" ]; then
-    SITES_PATH=$HOME
-    PUBLIC_DIR=public_html
-    WP_PATH=${SITES_PATH}/${PUBLIC_DIR}
+    sites_path=$HOME
+    public_dir=public_html
+    wp_path=${sites_path}/${public_dir}
     # dir_to_backup=public_html
-    # db_dump=${WP_PATH}/db.sql
+    # db_dump=${wp_path}/db.sql
 else
-    WP_PATH=${SITES_PATH}/${DOMAIN}/${PUBLIC_DIR}
-    # dir_to_backup=${DOMAIN}
-    # db_dump=${SITES_PATH}/${DOMAIN}/db.sql
+    wp_path=${sites_path}/${domain}/${public_dir}
+    # dir_to_backup=${domain}
+    # db_dump=${sites_path}/${domain}/db.sql
 fi
 
 if [ "$custom_wp_path" ]; then
-    WP_PATH="$custom_wp_path"
-    BACKUP_NAME=${custom_wp_path}/db.sql.gz
+    wp_path="$custom_wp_path"
+    backup_name=${custom_wp_path}/db.sql.gz
 fi
 
-[ -d "$WP_PATH" ] || { echo >&2 "WordPress is not found at ${WP_PATH}"; exit 1; }
+[ -d "$wp_path" ] || { echo >&2 "WordPress is not found at ${wp_path}"; exit 1; }
 
 echo "'$script_name' started on... $(date +%c)"
 
 # take actual DB backup
 # 2>/dev/null to suppress any warnings / errors
-wp --path="${WP_PATH}" transient delete --all 2>/dev/null
-if [ -n "$PASSPHRASE" ] ; then
-    BACKUP_NAME="${BACKUP_NAME}".gpg
-    wp --path="${WP_PATH}" db export --no-tablespaces=true --add-drop-table - | gzip | gpg --symmetric --passphrase "$PASSPHRASE" --batch -o "$BACKUP_NAME"
+wp --path="${wp_path}" transient delete --all 2>/dev/null
+if [ -n "$passphrase" ] ; then
+    backup_name="${backup_name}".gpg
+    wp --path="${wp_path}" db export --no-tablespaces=true --add-drop-table - | gzip | gpg --symmetric --passphrase "$passphrase" --batch -o "$backup_name"
 else
-    wp --path="${WP_PATH}" db export --no-tablespaces=true --add-drop-table - | gzip > "$BACKUP_NAME"
+    wp --path="${wp_path}" db export --no-tablespaces=true --add-drop-table - | gzip > "$backup_name"
 fi
 if [ "$?" = "0" ]; then
     printf "\nBackup is successfully taken locally."
@@ -215,19 +215,19 @@ else
     msg="$script_name - [Error] Something went wrong while taking local DB backup!"
     printf "\n%s\n\n" "$msg"
     echo "$msg" | mail -s 'DB Backup Failure' "$alertEmail"
-    [ -f "$BACKUP_NAME" ] && rm -f "$BACKUP_NAME"
+    [ -f "$backup_name" ] && rm -f "$backup_name"
     exit 1
 fi
 
-size=$(du $BACKUP_NAME | awk '{print $1}')
-sizeH=$(du -h $BACKUP_NAME | awk '{print $1}')
+size=$(du $backup_name | awk '{print $1}')
+sizeH=$(du -h $backup_name | awk '{print $1}')
 
-[ -L "$LATEST_BACKUP" ] && rm "$LATEST_BACKUP"
-ln -s "$BACKUP_NAME" "$LATEST_BACKUP"
+[ -L "$latest_backup" ] && rm "$latest_backup"
+ln -s "$backup_name" "$latest_backup"
 
 # send the backup offsite
-if [ "$BUCKET_NAME" ]; then
-    cmd="aws s3 cp $BACKUP_NAME s3://$BUCKET_NAME/${DOMAIN_FULL_PATH}/db-backups/ --only-show-errors"
+if [ "$bucket_name" ]; then
+    cmd="aws s3 cp $backup_name s3://$bucket_name/${domain_full_path}/db-backups/ --only-show-errors"
     if $cmd; then
         msg="Offsite backup successful."
         printf "\n%s\n\n" "$msg"
@@ -240,10 +240,10 @@ if [ "$BUCKET_NAME" ]; then
 fi
 
 # Auto delete backups
-find -L "$BACKUP_PATH" -type f -mtime +$AUTODELETEAFTER -exec rm {} \;
+find -L "$backup_path" -type f -mtime +$auto_delete_after -exec rm {} \;
 
-echo "Database backup is done; please check the latest backup in '${BACKUP_PATH}'."
-echo "Latest backup is at ${BACKUP_NAME}"
+echo "Database backup is done; please check the latest backup in '${backup_path}'."
+echo "Latest backup is at ${backup_name}"
 echo "Backup size: $size($sizeH)."
 
 printf "Script ended on...%s\n\n" "$(date +%c)"

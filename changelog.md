@@ -1,3 +1,7 @@
+version: 6.6.0
+    - date: 2025-07-29
+    - change variable names to lowercase.
+
 version: 6.5.0
     - date: 2025-07-21
     - include crontab in the backup.
