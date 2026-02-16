@@ -3,7 +3,7 @@
 # requirements
 # ~/log, ~/backups, ~/path/to/example.com/public
 
-version=6.4.0
+version=6.6.1
 
 ### Variables - Please do not add trailing slash in the PATHs
 
@@ -154,9 +154,9 @@ fi
 
 export PATH=~/bin:~/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin
 
-command -q wp   || { echo >&2 "wp cli is not found in $PATH. Exiting."; exit 1; }
-command -q aws  || { echo >&2 "[Warn]: aws cli is not found in \$PATH. Offsite backups will not be taken!"; }
-command -q mail || echo >&2 "[Warn]: 'mail' command is not found in \$PATH; Email alerts will not be sent!"
+command -v wp   >/dev/null || { echo >&2 "wp cli is not found in $PATH. Exiting."; exit 1; }
+command -v aws  >/dev/null || { echo >&2 "[Warn]: aws cli is not found in \$PATH. Offsite backups will not be taken!"; }
+command -v mail >/dev/null || echo >&2 "[Warn]: 'mail' command is not found in \$PATH; Email alerts will not be sent!"
 
 ((auto_delete_after--))
 

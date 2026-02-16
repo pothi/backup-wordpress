@@ -1,3 +1,7 @@
+version: 6.6.1
+    - date: 2026-02-14
+    - fix the syntax for the command 'command'
+
 version: 6.6.0
     - date: 2025-07-29
     - change variable names to lowercase.
